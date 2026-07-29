@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お弁当ご飯計算アプリ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --primary-dark: #d97706;
+            --bg-gradient-start: #fffbeb;
+            --bg-gradient-end: #fef3c7;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --card-bg: rgba(255, 255, 255, 0.85);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+        }
+
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05),
+                        0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08),
+                        0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 2.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 2rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1.25rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.9);
+            color: var(--text-main);
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+        }
+
+        .input-wrapper .unit {
+            position: absolute;
+            right: 1.25rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+
+        .result-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .result-value {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.25rem;
+            position: relative;
+        }
+
+        .result-value #exact-result {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .result-value .unit {
+            font-size: 1.5rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .result-recommendation {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: rgba(0,0,0,0.15);
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .result-recommendation.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Animation for value change */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-pop {
+            animation: pop 0.3s ease-out;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 2rem 1.5rem;
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍱 お弁当ご飯計算アプリ</h1>
+        <p class="subtitle">1人前 220g / 米1合 330g</p>
+        
+        <div class="input-group">
+            <label for="people">何人分のお弁当を作りますか？</label>
+            <div class="input-wrapper">
+                <input type="number" id="people" min="1" step="1" placeholder="例: 2" inputmode="numeric">
+                <span class="unit">人</span>
+            </div>
+        </div>
+
+        <div class="result-card" id="resultCard">
+            <div class="result-label">必要な炊飯量</div>
+            <div class="result-value">
+                <span id="exact-result">0.00</span>
+                <span class="unit">合</span>
+            </div>
+            <div class="result-recommendation" id="recommendation">
+                目安: <span id="rec-value">0</span> 合 炊くのがおすすめ
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const peopleInput = document.getElementById('people');
+        const exactResultEl = document.getElementById('exact-result');
+        const recValueEl = document.getElementById('rec-value');
+        const recommendationEl = document.getElementById('recommendation');
+
+        const RICE_PER_PERSON_G = 220;
+        const RICE_PER_GO_G = 330;
+
+        function calculateRice() {
+            const people = parseFloat(peopleInput.value);
+            
+            if (isNaN(people) || people <= 0) {
+                exactResultEl.textContent = '0.00';
+                recommendationEl.classList.remove('visible');
+                return;
+            }
+
+            // 計算式: (人数 * 220) / 330
+            const exactGo = (people * RICE_PER_PERSON_G) / RICE_PER_GO_G;
+            
+            // おすすめ量: 1合単位で切り上げ
+            const recommendedGo = Math.ceil(exactGo);
+
+            // アニメーションの再適用
+            exactResultEl.classList.remove('animate-pop');
+            void exactResultEl.offsetWidth; // trigger reflow
+            exactResultEl.classList.add('animate-pop');
+
+            // 値の更新
+            exactResultEl.textContent = exactGo.toFixed(2);
+            
+            if (exactGo > 0) {
+                recValueEl.textContent = recommendedGo;
+                recommendationEl.classList.add('visible');
+            } else {
+                recommendationEl.classList.remove('visible');
+            }
+        }
+
+        peopleInput.addEventListener('input', calculateRice);
+    </script>
+</body>
+</html>

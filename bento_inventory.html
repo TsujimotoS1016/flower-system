@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bento Inventory - お弁当在庫管理</title>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="app-container" v-cloak>
+        <!-- Sidebar / Navigation -->
+        <nav class="sidebar">
+            <div class="logo">🍱 BentoBox</div>
+            <ul class="nav-links">
+                <li :class="{ active: currentTab === 'inventory' }" @click="currentTab = 'inventory'">在庫・材料</li>
+                <li :class="{ active: currentTab === 'recipes' }" @click="currentTab = 'recipes'">おかずレシピ</li>
+                <li :class="{ active: currentTab === 'menus' }" @click="currentTab = 'menus'">お弁当メニュー</li>
+                <li :class="{ active: currentTab === 'calc' }" @click="currentTab = 'calc'">必要量計算(今日)</li>
+                <li :class="{ active: currentTab === 'shopping' }" @click="currentTab = 'shopping'">🛒 週間仕入れ</li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- TAB: Calculator -->
+            <div v-if="currentTab === 'calc'" class="tab-pane">
+                <header>
+                    <h1>必要量計算（今日の調理）</h1>
+                    <p>作るメニューと人数を選んで、今日必要な材料の量を確認します。</p>
+                </header>
+
+                <div class="card">
+                    <div class="flex-row">
+                        <div class="form-group" style="flex:2;">
+                            <label>メニュー</label>
+                            <select v-model="selectedMenuId">
+                                <option value="">メニューを選択...</option>
+                                <option v-for="menu in menus" :key="menu.id" :value="menu.id">{{ menu.name }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>人数</label>
+                            <input type="number" v-model.number="peopleCount" min="1" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" v-if="selectedMenu">
+                    <div v-if="selectedMenu.memo" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--primary-light); border-radius: 12px; color: var(--primary-dark);">
+                        <strong style="display:block; margin-bottom: 0.5rem;">📝 レシピメモ</strong>
+                        <div style="white-space: pre-wrap; font-size: 0.95rem;">{{ selectedMenu.memo }}</div>
+                    </div>
+                    
+                    <h2 style="margin-bottom: 1.5rem;">📊 {{ peopleCount }}人分の必要量</h2>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="inventory-table">
+                            <thead>
+                                <tr>
+                                    <th>材料</th>
+                                    <th>必要な量</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in calculationResults" :key="item.id">
+                                    <td style="font-weight: 600;">{{ item.name }}</td>
+                                    <td style="font-size: 1.1rem; color: var(--primary-dark); font-weight: bold;">{{ formatAmount(item.required, item.unit, item.gPerUnit) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 2.5rem; text-align: center;">
+                        <button class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem; width: 100%; max-width: 400px; border-radius: 100px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" @click="consumeStock">
+                            🍳 お弁当完成！（使った分を在庫からマイナスする）
+                        </button>
+                        <p style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+                            ※クリックすると、上の「必要な量」が在庫マスターから自動で差し引かれます。
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Inventory -->
+            <div v-if="currentTab === 'inventory'" class="tab-pane">
+                <header>
+                    <h1>在庫・材料マスター</h1>
+                    <p>冷蔵庫にある材料と、それぞれの目安グラム（案D）を登録します。</p>
+                </header>
+
+                <!-- Add New Ingredient -->
+                <div class="card">
+                    <h3 v-if="!editingIngredientId">➕ 新しい材料を登録</h3>
+                    <h3 v-else>⚙️ 材料を編集</h3>
+                    <div class="flex-row" style="margin-top: 1rem; align-items: flex-start; flex-wrap: wrap;">
+                        <div class="form-group" style="min-width: 150px;">
+                            <label>名前</label>
+                            <input type="text" v-model="newIngredient.name" placeholder="例: 冷凍唐揚げ">
+                        </div>
+                        <div class="form-group" style="width: 80px;">
+                            <label>基本単位</label>
+                            <select v-model="newIngredient.unit">
+                                <option value="個">個</option>
+                                <option value="本">本</option>
+                                <option value="枚">枚</option>
+                                <option value="合">合</option>
+                                <option value="g">g</option>
+                                <option value="ml">ml</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="width: 140px;">
+                            <label>目安 (1単位あたり)</label>
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <input type="number" v-model.number="newIngredient.gPerUnit" min="0" :disabled="newIngredient.unit === 'g' || newIngredient.unit === 'ml'">
+                                <span>g</span>
+                            </div>
+                            <div class="hint-text">例: 1個=30g (換算なしは0)</div>
+                        </div>
+
+                        <!-- パック・袋買い設定 -->
+                        <div class="form-group" style="background: #f9fafb; padding: 0.5rem 1rem; border-radius: 8px; flex: 1; min-width: 250px;">
+                            <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+                                <input type="checkbox" v-model="newIngredient.hasPackage" style="width: auto;">
+                                <span>袋やパックでまとめ買いする</span>
+                            </label>
+                            <div v-if="newIngredient.hasPackage" style="display:flex; align-items:center; gap:0.5rem;">
+                                <span>1</span>
+                                <input type="text" v-model="newIngredient.pkgUnit" placeholder="袋" style="width: 60px; padding:0.4rem;">
+                                <span>＝</span>
+                                <input type="number" v-model.number="newIngredient.pkgAmount" min="1" style="width: 70px; padding:0.4rem;">
+                                <select v-model="newIngredient.pkgAmountUnit" style="width: 70px; padding:0.4rem;" v-if="newIngredient.unit !== 'g' && newIngredient.unit !== 'ml' && newIngredient.gPerUnit > 0">
+                                    <option :value="newIngredient.unit">{{ newIngredient.unit }}</option>
+                                    <option value="g">g</option>
+                                </select>
+                                <span v-else>{{ newIngredient.unit }}</span>
+                            </div>
+                            <div v-if="newIngredient.hasPackage && newIngredient.pkgAmountUnit === 'g' && newIngredient.gPerUnit > 0" class="hint-text" style="margin-top: 0.5rem; color: var(--primary-dark);">
+                                (1袋 ＝ 約 {{ Math.floor(newIngredient.pkgAmount / newIngredient.gPerUnit) }} {{ newIngredient.unit }} 分として計算します)
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>現在庫 ({{ newIngredient.hasPackage ? newIngredient.pkgUnit : newIngredient.unit }})</label>
+                            <input type="number" v-model.number="newIngredient.displayStock" min="0" step="0.1" style="width: 100px;">
+                        </div>
+                        
+                        <div class="form-group" style="align-self: flex-end; display: flex; gap: 0.5rem;">
+                            <button v-if="!editingIngredientId" class="btn btn-primary" @click="addIngredient">追加</button>
+                            <template v-else>
+                                <button class="btn btn-primary" @click="updateIngredient">更新</button>
+                                <button class="btn" style="background: var(--surface); color: var(--text);" @click="cancelEditIngredient">キャンセル</button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ingredient List -->
+                <div class="card" style="padding: 0; overflow-x: auto;">
+                    <table class="list-table">
+                        <thead>
+                            <tr>
+                                <th>名前</th>
+                                <th>単位</th>
+                                <th>目安グラム換算</th>
+                                <th>現在庫</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="ing in ingredients" :key="ing.id">
+                                <td style="font-weight: 600;">{{ ing.name }}</td>
+                                <td>{{ ing.unit }}</td>
+                                <td>
+                                    <span v-if="ing.unit === 'g' || ing.unit === 'ml'">-</span>
+                                    <span v-else-if="!ing.gPerUnit || ing.gPerUnit === 0">換算なし</span>
+                                    <span v-else>1{{ ing.unit }} ＝ 約{{ ing.gPerUnit }}g</span>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <template v-if="ing.hasPackage">
+                                            <input type="number" :value="Math.round((ing.stock / ing.pkgAmount) * 100) / 100" @input="ing.stock = $event.target.value * ing.pkgAmount" min="0" step="0.1" style="width:80px; padding: 0.4rem;">
+                                            {{ ing.pkgUnit }}
+                                            <button class="btn" style="padding:0.25rem 0.5rem; font-size:0.8rem; background: var(--primary-light); color: var(--primary-dark);" @click="ing.stock = Number(ing.stock) + Number(ing.pkgAmount)" title="1パッケージ分を追加">
+                                                +1{{ ing.pkgUnit }}
+                                            </button>
+                                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">
+                                                (約 {{ Math.round(ing.stock * 10) / 10 }} {{ ing.unit }})
+                                            </span>
+                                        </template>
+                                        <template v-else>
+                                            <input type="number" v-model.number="ing.stock" min="0" step="0.1" style="width:80px; padding: 0.4rem;">
+                                            {{ ing.unit }}
+                                        </template>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display:flex; gap: 0.5rem;">
+                                        <button class="btn" style="padding: 0.25rem 0.5rem; background: var(--surface); color: var(--text);" @click="editIngredient(ing)">編集</button>
+                                        <button class="btn btn-danger" style="padding: 0.25rem 0.5rem;" @click="removeIngredient(ing.id)">削除</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- TAB: Recipes -->
+            <div v-if="currentTab === 'recipes'" class="tab-pane">
+                <header>
+                    <h1>おかずレシピ管理</h1>
+                    <p>お弁当に入る「おかず（卵焼き等）」と、その1人前に必要な材料を登録します。</p>
+                </header>
+
+                <div class="card">
+                    <h3 v-if="!editingRecipeId">➕ 新しいおかずを作成</h3>
+                    <h3 v-else>⚙️ おかずレシピを編集</h3>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>おかず名</label>
+                        <input type="text" v-model="newRecipe.name" placeholder="例: 定番の卵焼き">
+                    </div>
+                    <div class="form-group">
+                        <label>レシピメモ (任意)</label>
+                        <textarea v-model="newRecipe.memo" placeholder="簡単な作り方や、詰める時のコツなどをメモできます"></textarea>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <label style="font-weight: 600; display:block; margin-bottom: 0.5rem;">1人前の材料構成</label>
+                        <div class="flex-row" style="background:#f9fafb; padding:1rem; border-radius:12px;">
+                            <div class="form-group" style="flex: 2; margin-bottom:0;">
+                                <select v-model="newRecipeItem.ingredientId">
+                                    <option value="">材料を選択...</option>
+                                    <option v-for="ing in ingredients" :key="ing.id" :value="ing.id">{{ ing.name }} ({{ ing.unit }})</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom:0;">
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <input type="number" v-model.number="newRecipeItem.amount" min="0.1" step="0.1">
+                                    <template v-if="newRecipeItem.ingredientId">
+                                        <select v-if="getIngById(newRecipeItem.ingredientId)?.gPerUnit > 0 && getIngById(newRecipeItem.ingredientId)?.unit !== 'g'" v-model="newRecipeItem.inputUnit" style="width: 70px; padding: 0.3rem;">
+                                            <option value="base">{{ getIngById(newRecipeItem.ingredientId)?.unit }}</option>
+                                            <option value="g">g</option>
+                                        </select>
+                                        <span v-else style="font-size:0.9rem;">
+                                            {{ getIngById(newRecipeItem.ingredientId)?.unit }}
+                                        </span>
+                                    </template>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" @click="addIngredientToNewRecipe" style="padding:0.7rem 1rem;">追加</button>
+                        </div>
+
+                        <!-- Current building items -->
+                        <div style="margin-top: 1rem;">
+                            <div v-for="(item, idx) in newRecipe.items" :key="idx" class="menu-builder-item">
+                                <strong>{{ getIngName(item.ingredientId) }}</strong>
+                                <span>{{ item.amount }} {{ getIngById(item.ingredientId)?.unit }}</span>
+                                <button class="btn btn-danger" style="margin-left:auto; padding: 0.25rem 0.5rem;" @click="removeIngredientFromNewRecipe(idx)">✕</button>
+                            </div>
+                        </div>
+                        
+                        <div v-if="!editingRecipeId">
+                            <button class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;" @click="addNewRecipe" :disabled="!newRecipe.name || newRecipe.items.length === 0">
+                                このおかずを保存
+                            </button>
+                        </div>
+                        <div v-else style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" style="flex: 1;" @click="updateRecipe" :disabled="!newRecipe.name || newRecipe.items.length === 0">更新</button>
+                            <button class="btn" style="flex: 1; background: var(--surface); color: var(--text);" @click="cancelEditRecipe">キャンセル</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Recipes -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <div class="card" v-for="recipe in recipes" :key="recipe.id" style="margin-bottom: 0;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 1rem;">
+                            <h3>{{ recipe.name }}</h3>
+                            <div style="display:flex; gap: 0.5rem;">
+                                <button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; background: var(--surface); color: var(--text);" @click="editRecipe(recipe)">編集</button>
+                                <button class="btn btn-danger" style="padding: 0.25rem 0.75rem;" @click="removeRecipe(recipe.id)">削除</button>
+                            </div>
+                        </div>
+                        <div v-if="recipe.memo" style="margin-bottom: 1rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); white-space: pre-wrap;">{{ recipe.memo }}</div>
+                        <ul style="list-style:none;">
+                            <li v-for="(item, idx) in recipe.items" :key="idx" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; display:flex; justify-content:space-between;">
+                                <span>{{ getIngName(item.ingredientId) }}</span>
+                                <strong>{{ item.amount }} {{ getIngById(item.ingredientId)?.unit }}</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!-- TAB: Menus -->
+            <div v-if="currentTab === 'menus'" class="tab-pane">
+                <header>
+                    <h1>お弁当メニュー管理</h1>
+                    <p>作成した「おかず」を組み合わせて、お弁当の全体メニューを作ります。</p>
+                </header>
+
+                <div class="card">
+                    <h3 v-if="!editingMenuId">➕ 新しいメニューを作成</h3>
+                    <h3 v-else>⚙️ メニューを編集</h3>
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>メニュー名</label>
+                        <input type="text" v-model="newMenu.name" placeholder="例: ハンバーグ弁当">
+                    </div>
+                    <div class="form-group">
+                        <label>お弁当メモ (任意)</label>
+                        <textarea v-model="newMenu.memo" placeholder="お弁当全体のテーマや、詰める順番などをメモできます"></textarea>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <label style="font-weight: 600; display:block; margin-bottom: 0.5rem;">入れるおかず</label>
+                        <div class="flex-row" style="background:#f9fafb; padding:1rem; border-radius:12px;">
+                            <div class="form-group" style="flex: 2; margin-bottom:0;">
+                                <select v-model="newMenuItem.recipeId">
+                                    <option value="">おかずを選択...</option>
+                                    <option v-for="recipe in recipes" :key="recipe.id" :value="recipe.id">{{ recipe.name }}</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom:0;">
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <input type="number" v-model.number="newMenuItem.amount" min="1" step="1">
+                                    <span style="font-size:0.9rem;">人前分</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" @click="addRecipeToNewMenu" style="padding:0.7rem 1rem;">追加</button>
+                        </div>
+
+                        <!-- Current building items -->
+                        <div style="margin-top: 1rem;">
+                            <div v-for="(item, idx) in newMenu.items" :key="idx" class="menu-builder-item">
+                                <strong>{{ getRecipeName(item.recipeId) }}</strong>
+                                <span>{{ item.amount }} 人前分</span>
+                                <button class="btn btn-danger" style="margin-left:auto; padding: 0.25rem 0.5rem;" @click="removeRecipeFromNewMenu(idx)">✕</button>
+                            </div>
+                        </div>
+                        
+                        <div v-if="!editingMenuId">
+                            <button class="btn btn-primary" style="margin-top: 1.5rem; width: 100%;" @click="addNewMenu" :disabled="!newMenu.name || newMenu.items.length === 0">
+                                このメニューを保存
+                            </button>
+                        </div>
+                        <div v-else style="margin-top: 1.5rem; display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" style="flex: 1;" @click="updateMenu" :disabled="!newMenu.name || newMenu.items.length === 0">更新</button>
+                            <button class="btn" style="flex: 1; background: var(--surface); color: var(--text);" @click="cancelEditMenu">キャンセル</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Menus -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <div class="card" v-for="menu in menus" :key="menu.id" style="margin-bottom: 0;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 1rem;">
+                            <h3>{{ menu.name }}</h3>
+                            <div style="display:flex; gap: 0.5rem;">
+                                <button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.85rem; background: var(--surface); color: var(--text);" @click="editMenu(menu)">編集</button>
+                                <button class="btn btn-danger" style="padding: 0.25rem 0.75rem;" @click="removeMenu(menu.id)">削除</button>
+                            </div>
+                        </div>
+                        <div v-if="menu.memo" style="margin-bottom: 1rem; padding: 0.75rem; background: #f9fafb; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); white-space: pre-wrap;">{{ menu.memo }}</div>
+                        <ul style="list-style:none;">
+                            <li v-for="(item, idx) in menu.items" :key="idx" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; display:flex; justify-content:space-between;">
+                                <span>{{ getRecipeName(item.recipeId) }}</span>
+                                <strong>{{ item.amount }} 人前分</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: Weekly Shopping -->
+            <div v-if="currentTab === 'shopping'" class="tab-pane">
+                <header>
+                    <h1>週間仕入れリスト（お買い物リスト）</h1>
+                    <p>1週間分の作る予定を入力すると、現在の在庫を差し引いて「買うべきもの」をリストアップします。</p>
+                </header>
+                
+                <div class="card">
+                    <h3>1. 仕入れ予定の入力</h3>
+                    <div style="margin-top: 1rem;">
+                        <div v-for="(plan, idx) in weeklyPlan" :key="plan.id" class="flex-row" style="background:#f9fafb; padding:0.75rem; border-radius:8px; margin-bottom: 0.5rem; align-items:center;">
+                            <div class="form-group" style="flex: 2; margin-bottom:0;">
+                                <select v-model="plan.menuId">
+                                    <option value="">メニューを選択...</option>
+                                    <option v-for="menu in menus" :key="menu.id" :value="menu.id">{{ menu.name }}</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom:0;">
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <input type="number" v-model.number="plan.peopleCount" min="1" step="1">
+                                    <span style="font-size:0.9rem;">人分</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-danger" style="padding: 0.5rem 0.75rem;" @click="removeWeeklyPlanItem(idx)">✕</button>
+                        </div>
+                        <button class="btn" style="margin-top: 0.5rem; background: var(--primary-light); color: var(--primary-dark); width: 100%;" @click="addWeeklyPlanItem">➕ 予定を追加</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>2. お買い物リスト</h3>
+                    <div v-if="weeklyShoppingList.length === 0" style="margin-top: 1rem; color: var(--text-muted);">
+                        予定を追加すると、ここにリストが表示されます。
+                    </div>
+                    <div v-else style="overflow-x: auto; margin-top: 1rem;">
+                        <table class="list-table">
+                            <thead>
+                                <tr>
+                                    <th>材料</th>
+                                    <th>1週間の必要量</th>
+                                    <th>現在庫</th>
+                                    <th>買うべき量</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in weeklyShoppingList" :key="item.id" :style="item.shortage > 0 ? 'background: #fff5f5;' : ''">
+                                    <td style="font-weight: 600;">{{ item.name }}</td>
+                                    <td>{{ formatAmount(item.required, item.unit, item.gPerUnit) }}</td>
+                                    <td>{{ formatAmount(item.stock, item.unit, item.gPerUnit) }}</td>
+                                    <td>
+                                        <div v-if="item.shortage > 0">
+                                            <div style="font-weight:bold; color: var(--danger); font-size: 1.1rem;">
+                                                {{ item.hasPackage ? (item.buyPackages + ' ' + item.pkgUnit) : formatAmount(item.shortage, item.unit, item.gPerUnit) }}
+                                            </div>
+                                            <div v-if="item.hasPackage" style="font-size: 0.85rem; color: var(--text-muted);">
+                                                (不足: {{ formatAmount(item.shortage, item.unit, item.gPerUnit) }})
+                                            </div>
+                                        </div>
+                                        <div v-else style="color: var(--success); font-weight: bold;">
+                                            ✅ 在庫十分
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
