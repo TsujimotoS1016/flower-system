@@ -1585,8 +1585,8 @@ export default {
                 <div class="card" style="margin-bottom: 2rem; overflow-x: auto; padding-top: 1rem;">
                     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
                         <h3 style="margin: 0; margin-right: 1rem;">配達先別 個数表</h3>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <label style="font-weight: bold; margin-bottom: 0;">日付:</label>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: nowrap;">
+                            <label style="font-weight: bold; margin-bottom: 0; white-space: nowrap;">日付:</label>
                             <input type="date" v-model="bentoDestinations.date" style="padding: 0.25rem 0.5rem; font-size: 1rem; border: none; border-bottom: 2px solid #333; border-radius: 0; background: transparent; outline: none;">
                         </div>
                         <button class="btn btn-secondary no-print" style="margin-left: auto; padding: 0.4rem 0.8rem; font-size: 0.95rem; background: var(--primary); color: white; border: none; border-radius: 4px;" @click="showMonthlySummaryModal = true">
