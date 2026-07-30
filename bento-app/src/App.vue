@@ -853,13 +853,34 @@ export default {
         <nav class="sidebar">
             <div class="logo">BentoBox</div>
             <ul class="nav-links">
-                <li v-if="ingredients.length === 0" :class="{ active: currentTab === 'guide' }" @click="currentTab = 'guide'">はじめに</li>
-                <li :class="{ active: currentTab === 'inventory' }" @click="currentTab = 'inventory'">在庫・材料</li>
-                <li :class="{ active: currentTab === 'recipes' }" @click="currentTab = 'recipes'">おかずレシピ</li>
-                <li :class="{ active: currentTab === 'menus' }" @click="currentTab = 'menus'">お弁当メニュー</li>
-                <li :class="{ active: currentTab === 'daily' }" @click="currentTab = 'daily'">日々の作業・実績</li>
-                <li :class="{ active: currentTab === 'shopping' }" @click="currentTab = 'shopping'">週間仕入れ</li>
-                <li :class="{ active: currentTab === 'calendar' }" @click="currentTab = 'calendar'">月間カレンダー</li>
+                <li v-if="ingredients.length === 0" :class="{ active: currentTab === 'guide' }" @click="currentTab = 'guide'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span>はじめに</span>
+                </li>
+                <li :class="{ active: currentTab === 'inventory' }" @click="currentTab = 'inventory'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>在庫</span>
+                </li>
+                <li :class="{ active: currentTab === 'recipes' }" @click="currentTab = 'recipes'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    <span>レシピ</span>
+                </li>
+                <li :class="{ active: currentTab === 'menus' }" @click="currentTab = 'menus'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                    <span>メニュー</span>
+                </li>
+                <li :class="{ active: currentTab === 'daily' }" @click="currentTab = 'daily'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>実績</span>
+                </li>
+                <li :class="{ active: currentTab === 'shopping' }" @click="currentTab = 'shopping'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <span>仕入れ</span>
+                </li>
+                <li :class="{ active: currentTab === 'calendar' }" @click="currentTab = 'calendar'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <span>カレンダー</span>
+                </li>
             </ul>
         <button class="btn btn-danger logout-btn" @click="handleLogout">ログアウト</button>
         </nav>
@@ -929,8 +950,8 @@ export default {
                         <thead>
                             <tr>
                                 <th>名前</th>
-                                <th>単位</th>
-                                <th>目安グラム換算</th>
+                                <th class="hide-on-mobile">単位</th>
+                                <th class="hide-on-mobile">目安グラム換算</th>
                                 <th>現在庫</th>
                                 <th>操作</th>
                             </tr>
@@ -938,8 +959,8 @@ export default {
                         <tbody>
                             <tr v-for="ing in sortedIngredients" :key="ing.id">
                                 <td style="font-weight: 600;">{{ ing.name }}</td>
-                                <td>{{ ing.unit }}</td>
-                                <td>
+                                <td class="hide-on-mobile">{{ ing.unit }}</td>
+                                <td class="hide-on-mobile">
                                     <span v-if="ing.unit === 'g' || ing.unit === 'ml'">-</span>
                                     <span v-else-if="!ing.gPerUnit || ing.gPerUnit === 0">換算なし</span>
                                     <span v-else>1{{ ing.unit }} ＝ 約{{ ing.gPerUnit }}g</span>
