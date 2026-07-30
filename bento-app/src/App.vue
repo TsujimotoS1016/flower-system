@@ -869,15 +869,15 @@ export default {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                     <span>メニュー</span>
                 </li>
-                <li :class="{ active: currentTab === 'daily' }" @click="currentTab = 'daily'">
+                <li :class="{ active: currentTab === 'daily', 'hide-on-mobile': true }" @click="currentTab = 'daily'">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     <span>実績</span>
                 </li>
-                <li :class="{ active: currentTab === 'shopping' }" @click="currentTab = 'shopping'">
+                <li :class="{ active: currentTab === 'shopping', 'hide-on-mobile': true }" @click="currentTab = 'shopping'">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
                     <span>仕入れ</span>
                 </li>
-                <li :class="{ active: currentTab === 'calendar' }" @click="currentTab = 'calendar'">
+                <li :class="{ active: currentTab === 'calendar', 'hide-on-mobile': true }" @click="currentTab = 'calendar'">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                     <span>カレンダー</span>
                 </li>
