@@ -1289,12 +1289,14 @@ export default {
 
 
                 <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.9rem; font-weight:600; color:var(--text-color); background: white; padding: 0.5rem 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); white-space: nowrap;">
+                    <label style="display:flex; align-items:center; gap:0.25rem; font-size:0.9rem; font-weight:600; color:var(--primary); white-space: nowrap; cursor: pointer;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M7 12h10"></path><path d="M10 18h4"></path></svg>
                         並び順:
-                        <select v-model="sortOrder" style="padding: 0.3rem 0.5rem; border-radius:4px; border:1px solid #d1d5db; background:#f9fafb;">
+                        <select v-model="sortOrder" style="padding: 0.2rem; border:none; background:transparent; color: var(--primary); font-weight: 600; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none;">
                             <option value="added">追加した順</option>
                             <option value="alphabetical">あいうえお順</option>
                         </select>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-4px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </label>
                 </div>
                 <!-- Existing Menus -->
