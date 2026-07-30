@@ -869,6 +869,10 @@ export default {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
                     <span>メニュー</span>
                 </li>
+                <li :class="{ active: currentTab === 'mobile_only', 'show-on-mobile': true }" @click="currentTab = 'mobile_only'">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                    <span>スマホ用</span>
+                </li>
                 <li :class="{ active: currentTab === 'daily', 'hide-on-mobile': true }" @click="currentTab = 'daily'">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                     <span>実績</span>
@@ -889,8 +893,20 @@ export default {
         <!-- Main Content -->
         <main class="main-content">
 
+            <!-- TAB: Mobile Only (Dummy) -->
+            <div v-if="currentTab === 'mobile_only'" class="tab-pane show-on-mobile">
+                <header>
+                    <h1>スマホ専用メニュー</h1>
+                    <p>このタブはモバイル版だけで表示されます。ここに入れたい機能をご指示ください。</p>
+                </header>
+                <div class="card">
+                    <p style="text-align:center; padding:2rem; color:var(--text-muted);">
+                        準備中...<br>
+                        （例: 簡易ダッシュボード、スマホ用の特別な入力フォーム等）
+                    </p>
+                </div>
+            </div>
 
-            
             <!-- TAB: Guide -->
             <div v-if="currentTab === 'guide'" class="tab-pane">
                 <header>

@@ -260,6 +260,10 @@
             width: 100%;
         }
 
+        .show-on-mobile {
+            display: none !important;
+        }
+
         /* Mobile (App-like UI) */
         @media (max-width: 768px) {
             .app-container {
@@ -309,6 +313,12 @@
             }
             .hide-on-mobile {
                 display: none !important;
+            }
+            .show-on-mobile {
+                display: flex !important;
+            }
+            div.show-on-mobile {
+                display: block !important;
             }
             .nav-links li.active {
                 background: transparent;
