@@ -390,7 +390,7 @@
 
 /* Print Styles */
 @media print {
-    @page { size: A4 landscape; margin: 10mm; }
+    @page { margin: 10mm; }
     table { min-width: auto !important; }
     .card { margin-bottom: 0 !important; border: none !important; box-shadow: none !important; }
     .print-only { display: block !important; }

@@ -70,10 +70,13 @@ export default {
                             const recipe = recipes.value.find(r => r.id === menuItem.recipeId);
                             if (!recipe) return;
                             
+                            const batchMul = recipe.batchMultiple || 1;
+                            const requiredServings = menuItem.amount * calcItem.peopleCount;
+                            const actualServings = Math.ceil(requiredServings / batchMul) * batchMul;
+                            
                             recipe.items.forEach(recipeItem => {
                                 const ingId = recipeItem.ingredientId;
-                                const amountPerPerson = (recipeItem.amount / (recipe.servings || 1)) * menuItem.amount;
-                                const totalAmount = amountPerPerson * calcItem.peopleCount;
+                                const totalAmount = (recipeItem.amount / (recipe.servings || 1)) * actualServings;
                                 
                                 if (requiredMap.has(ingId)) {
                                     const entry = requiredMap.get(ingId);
@@ -122,6 +125,10 @@ export default {
                 const removePrepItem = (index) => {
                     prepItems.value.splice(index, 1);
                 };
+                const handlePrepRecipeChange = (item) => {
+                    const recipe = recipes.value.find(r => r.id === item.recipeId);
+                    if (recipe) item.servings = 1;
+                };
                 const prepCalculationResults = computed(() => {
                     const requiredMap = new Map();
                     
@@ -132,7 +139,9 @@ export default {
                         
                         recipe.items.forEach(recipeItem => {
                             const ingId = recipeItem.ingredientId;
-                            const totalAmount = (recipeItem.amount / (recipe.servings || 1)) * prep.servings;
+                            const batchMul = recipe.batchMultiple || 1;
+                            const actualServings = Math.ceil(prep.servings / batchMul) * batchMul;
+                            const totalAmount = (recipeItem.amount / (recipe.servings || 1)) * actualServings;
                             
                             if (requiredMap.has(ingId)) {
                                 requiredMap.get(ingId).total += totalAmount;
@@ -308,7 +317,7 @@ export default {
 
                 // レシピ管理ロジック
                 const editingRecipeId = ref(null);
-                const newRecipe = ref({ name: '', yomi: '', memo: '', servings: 1, items: [] });
+                const newRecipe = ref({ name: '', yomi: '', memo: '', servings: 1, batchMultiple: 1, items: [] });
                 const newRecipeItem = ref({ ingredientId: '', amount: 1, inputUnit: 'base' });
                 watch(() => newRecipeItem.value.ingredientId, () => { newRecipeItem.value.inputUnit = 'base'; });
                 
@@ -346,9 +355,10 @@ export default {
                         yomi: newRecipe.value.yomi,
                         memo: newRecipe.value.memo,
                         servings: newRecipe.value.servings || 1,
+                        batchMultiple: newRecipe.value.batchMultiple || 1,
                         items: [...newRecipe.value.items]
                     });
-                    newRecipe.value = { name: '', yomi: '', memo: '', servings: 1, items: [] };
+                    newRecipe.value = { name: '', yomi: '', memo: '', servings: 1, batchMultiple: 1, items: [] };
                 };
                 
                 const editRecipe = (recipe) => {
@@ -358,6 +368,7 @@ export default {
                         yomi: recipe.yomi || '',
                         memo: recipe.memo,
                         servings: recipe.servings || 1,
+                        batchMultiple: recipe.batchMultiple || 1,
                         items: JSON.parse(JSON.stringify(recipe.items))
                     };
                     showAddRecipeForm.value = true;
@@ -369,7 +380,7 @@ export default {
 
                 const openAddRecipeForm = () => {
                     editingRecipeId.value = null;
-                    newRecipe.value = { name: '', yomi: '', memo: '', servings: 1, items: [] };
+                    newRecipe.value = { name: '', yomi: '', memo: '', servings: 1, batchMultiple: 1, items: [] };
                     showAddRecipeForm.value = true;
                     setTimeout(() => {
                         const mainContent = document.querySelector('.main-content');
@@ -379,7 +390,7 @@ export default {
 
                 const cancelEditRecipe = () => {
                     editingRecipeId.value = null;
-                    newRecipe.value = { name: '', yomi: '', memo: '', servings: 1, items: [] };
+                    newRecipe.value = { name: '', yomi: '', memo: '', servings: 1, batchMultiple: 1, items: [] };
                     showAddRecipeForm.value = false;
                 };
 
@@ -393,6 +404,7 @@ export default {
                             yomi: newRecipe.value.yomi,
                             memo: newRecipe.value.memo,
                             servings: newRecipe.value.servings || 1,
+                            batchMultiple: newRecipe.value.batchMultiple || 1,
                             items: [...newRecipe.value.items]
                         };
                     }
@@ -600,8 +612,13 @@ export default {
                         menu.items.forEach(menuItem => {
                             const recipe = recipes.value.find(r => r.id === menuItem.recipeId);
                             if (!recipe) return;
+                            
+                            const batchMul = recipe.batchMultiple || 1;
+                            const requiredServings = menuItem.amount * plan.peopleCount;
+                            const actualServings = Math.ceil(requiredServings / batchMul) * batchMul;
+                            
                             recipe.items.forEach(recipeItem => {
-                                const totalIngAmount = (recipeItem.amount / (recipe.servings || 1)) * menuItem.amount * plan.peopleCount;
+                                const totalIngAmount = (recipeItem.amount / (recipe.servings || 1)) * actualServings;
                                 req[recipeItem.ingredientId] = (req[recipeItem.ingredientId] || 0) + totalIngAmount;
                             });
                         });
@@ -628,12 +645,15 @@ export default {
                             const recipe = recipes.value.find(r => r.id === menuItem.recipeId);
                             if (!recipe) return;
                             
+                            const batchMul = recipe.batchMultiple || 1;
+                            const requiredServings = menuItem.amount * plan.peopleCount;
+                            const actualServings = Math.ceil(requiredServings / batchMul) * batchMul;
+                            
                             const reqList = [];
                             recipe.items.forEach(recipeItem => {
-                                const totalIngAmount = (recipeItem.amount / (recipe.servings || 1)) * menuItem.amount * plan.peopleCount;
+                                const totalIngAmount = (recipeItem.amount / (recipe.servings || 1)) * actualServings;
                                 const ing = ingredients.value.find(i => i.id === recipeItem.ingredientId);
                                 if (ing) {
-                                    // if already exists in reqList, add to it
                                     const existing = reqList.find(x => x.id === ing.id);
                                     if (existing) {
                                         existing.required += totalIngAmount;
@@ -645,6 +665,7 @@ export default {
                             
                             recipesInMenu.push({
                                 recipe: recipe,
+                                recipeAmount: actualServings,
                                 amount: menuItem.amount,
                                 ingredients: reqList
                             });
@@ -710,8 +731,12 @@ export default {
                             const recipe = recipes.value.find(r => r.id === menuItem.recipeId);
                             if (!recipe) return;
                             
+                            const batchMul = recipe.batchMultiple || 1;
+                            const requiredServings = menuItem.amount * plan.peopleCount;
+                            const actualServings = Math.ceil(requiredServings / batchMul) * batchMul;
+                            
                             recipe.items.forEach(recipeItem => {
-                                const totalIngAmount = recipeItem.amount * menuItem.amount * plan.peopleCount;
+                                const totalIngAmount = (recipeItem.amount / (recipe.servings || 1)) * actualServings;
                                 req[recipeItem.ingredientId] = (req[recipeItem.ingredientId] || 0) + totalIngAmount;
                             });
                         });
@@ -723,9 +748,9 @@ export default {
                         const ingId = parseInt(ingIdStr);
                         const ing = ingredients.value.find(i => i.id === ingId);
                         if (!ing) return;
-
+                        
                         const totalRequired = req[ingId];
-                        const shortage = Math.max(0, totalRequired - ing.stock);
+                        const shortage = Math.ceil(Math.max(0, totalRequired - ing.stock));
                         
                         let buyPackages = 0;
                         if (shortage > 0 && ing.hasPackage && ing.pkgAmount > 0) {
@@ -842,7 +867,7 @@ export default {
                     sortedIngredients, sortedRecipes, sortedMenus, sortOrder, showAddIngredientForm, openAddIngredientForm, showAddRecipeForm, openAddRecipeForm, showAddMenuForm, openAddMenuForm,
                     currentTab, ingredients, recipes, menus, selectedCalcItems, addCalcItem, removeCalcItem, getMenuById, hasAnyMemos, 
                     calculationResults, shoppingList, sufficientList, formatAmount, 
-                    prepItems, addPrepItem, removePrepItem, prepCalculationResults,
+                    prepItems, addPrepItem, removePrepItem, handlePrepRecipeChange, prepCalculationResults,
                     newIngredient, addIngredient, removeIngredient, editingIngredientId, editIngredient, cancelEditIngredient, updateIngredient,
                     newRecipe, newRecipeItem, addNewRecipe, removeRecipe, addIngredientToNewRecipe, removeIngredientFromNewRecipe, editingRecipeId, editRecipe, cancelEditRecipe, updateRecipe,
                     newMenu, newMenuItem, addNewMenu, removeMenu, addRecipeToNewMenu, removeRecipeFromNewMenu, editingMenuId, editMenu, cancelEditMenu, updateMenu, 
@@ -864,6 +889,14 @@ export default {
 </script>
 
 <template>
+  <component :is="'style'">
+    @media print {
+      @page {
+        size: A4 {{ currentTab === 'calendar' ? 'landscape' : 'portrait' }};
+        margin: 10mm;
+      }
+    }
+  </component>
   <div class="app-container">
     <div v-if="!user" style="display:flex; align-items:center; justify-content:center; width:100%; height:100vh; background:var(--bg-color);">
         <div class="card" style="width: 100%; max-width: 400px;">
@@ -943,7 +976,7 @@ export default {
                 <div class="card" style="margin-bottom: 1rem;">
                     <div v-for="(item, idx) in prepItems" :key="item.id" class="form-group" style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border);">
                         <label>レシピ</label>
-                        <select v-model="item.recipeId" style="margin-bottom:0.5rem;">
+                        <select v-model="item.recipeId" @change="handlePrepRecipeChange(item)" style="margin-bottom:0.5rem;">
                             <option value="">選択してください</option>
                             <option v-for="r in sortedRecipes" :key="r.id" :value="r.id">{{ r.name }}</option>
                         </select>
@@ -1222,11 +1255,20 @@ export default {
                     
                     <div style="margin-top: 1.5rem;">
                         
-                    <div class="form-group" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; background: #f0fdf4; padding: 1rem; border-radius: 8px;">
-                        <label style="margin: 0; font-weight: 600; white-space: nowrap;">このレシピは何人前ですか？</label>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="number" v-model.number="newRecipe.servings" min="1" step="1" style="width: 80px; text-align: right; font-size: 1.1rem; padding: 0.4rem;">
-                            <span style="font-weight: 600;">人前</span>
+                    <div class="form-group" style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1.5rem; background: #f0fdf4; padding: 1rem; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <label style="margin: 0; font-weight: 600; white-space: nowrap;">このレシピは何人前ですか？</label>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" v-model.number="newRecipe.servings" min="1" step="1" style="width: 80px; text-align: right; font-size: 1.1rem; padding: 0.4rem;">
+                                <span style="font-weight: 600;">人前</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem; border-left: 2px solid #dcfce7; padding-left: 1.5rem;">
+                            <label style="margin: 0; font-weight: 600; white-space: nowrap;" title="卵焼き(18切れ)のように、特定単位でしか作れない場合はその数を指定してください">作成ロット単位 (倍数):</label>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" v-model.number="newRecipe.batchMultiple" min="1" step="1" style="width: 80px; text-align: right; font-size: 1.1rem; padding: 0.4rem;">
+                                <span style="font-weight: 600;">人前単位</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -1509,8 +1551,9 @@ export default {
                             <div v-for="(grp, index) in todayExpectedIngredientsByMenu" :key="grp.id" :class="{'page-break': index > 0 && index % 2 === 0}" style="border: 1px solid #eee; padding: 1rem; border-radius: 8px;">
                                 <h4 style="color: var(--primary-dark); margin-bottom: 0.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">{{ grp.menu.name }} <span style="font-size: 0.9rem; font-weight: normal; color: var(--muted);">({{ grp.portions }} 人前分)</span></h4>
                                 <div v-for="(recGrp, rIdx) in grp.recipes" :key="rIdx" class="print-recipe-group" style="margin-bottom: 1rem;">
-                                    <div class="print-recipe-title" style="font-weight: 600; font-size: 0.95rem; background: #f8fafc; padding: 0.25rem 0.5rem; border-left: 3px solid var(--primary); margin-bottom: 0.5rem; color: var(--text);">
-                                        {{ recGrp.recipe.name }}
+                                    <div class="print-recipe-title" style="font-weight: 600; font-size: 0.95rem; background: #f8fafc; padding: 0.25rem 0.5rem; border-left: 3px solid var(--primary); margin-bottom: 0.5rem; color: var(--text); display: flex; justify-content: space-between;">
+                                        <span>{{ recGrp.recipe.name }}</span>
+                                        <span style="font-size: 0.85rem; color: var(--primary-dark);">{{ recGrp.recipeAmount }} 人前</span>
                                     </div>
                                     <ul class="print-ingredient-list" style="list-style: none; padding: 0 0 0 0.5rem; margin: 0; display: flex; flex-direction: column; gap: 0.25rem;">
                                         <li v-for="item in recGrp.ingredients" :key="item.id" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding-bottom: 0.25rem;">
