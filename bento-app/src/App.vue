@@ -1095,7 +1095,10 @@ export default {
                         <div style="margin-top: 1rem;">
                             <div v-for="(item, idx) in newRecipe.items" :key="idx" class="menu-builder-item">
                                 <strong>{{ getIngName(item.ingredientId) }}</strong>
-                                <span>{{ item.amount }} {{ getIngById(item.ingredientId)?.unit }}</span>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem;">
+                                    <input type="number" v-model.number="item.amount" min="0.1" step="0.1" style="width: 80px; padding: 0.3rem; text-align: right;">
+                                    <span>{{ getIngById(item.ingredientId)?.unit }}</span>
+                                </div>
                                 <button class="btn btn-danger" style="margin-left:auto; padding: 0.25rem 0.5rem;" @click="removeIngredientFromNewRecipe(idx)">✕</button>
                             </div>
                         </div>
@@ -1203,7 +1206,10 @@ export default {
                                  style="cursor: grab;">
                                 <div style="margin-right: 0.5rem; color: #9ca3af; cursor: grab;">≡</div>
                                 <strong>{{ getRecipeName(item.recipeId) }}</strong>
-                                <span style="margin-left: 0.5rem;">{{ item.amount }} 人前分</span>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem;">
+                                    <input type="number" v-model.number="item.amount" min="1" step="1" style="width: 80px; padding: 0.3rem; text-align: right;">
+                                    <span>人前分</span>
+                                </div>
                                 <button class="btn btn-danger" style="margin-left:auto; padding: 0.25rem 0.5rem;" @click="removeRecipeFromNewMenu(idx)">✕</button>
                             </div>
                         </div>
