@@ -366,8 +366,16 @@
 }
 
 
+.print-only { display: none; }
+
 /* Print Styles */
 @media print {
+    @page { size: A4 landscape; margin: 10mm; }
+    table { min-width: auto !important; }
+    .card { margin-bottom: 0 !important; border: none !important; box-shadow: none !important; }
+    .print-only { display: block !important; }
+    .calendar-cell { height: 48px !important; padding: 1px !important; }
+    .calendar-input { height: 32px !important; font-size: 1.4rem !important; font-weight: bold !important; }
     body, .app-container, .main-content {
         background: white !important;
         margin: 0 !important;

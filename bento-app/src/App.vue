@@ -490,6 +490,60 @@ export default {
                 const bentoSubtotal3 = computed(() => Number(bentoDestinations.value.familia||0) + Number(bentoDestinations.value.hajime||0) + Number(bentoDestinations.value.kishigawa||0));
                 const bentoGrandTotal = computed(() => bentoSubtotal1.value + bentoSubtotal2.value + bentoSubtotal3.value);
 
+                const calendarYear = ref(new Date().getFullYear());
+                const calendarMonth = ref(new Date().getMonth());
+                const calendarData = ref({});
+
+                const calendarWeeks = computed(() => {
+                    const year = calendarYear.value;
+                    const month = calendarMonth.value;
+                    const weeks = [];
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    
+                    let currentDate = new Date(firstDay);
+                    let diff = currentDate.getDay() - 1;
+                    if (diff < 0) diff = 6;
+                    currentDate.setDate(currentDate.getDate() - diff);
+                    
+                    while (currentDate <= lastDay || currentDate.getDay() !== 1) {
+                        let week = [];
+                        for (let i = 0; i < 7; i++) {
+                            week.push({
+                                date: new Date(currentDate),
+                                dateNum: currentDate.getDate(),
+                                isCurrentMonth: currentDate.getMonth() === month,
+                                dayIndex: currentDate.getDay()
+                            });
+                            currentDate.setDate(currentDate.getDate() + 1);
+                        }
+                        const workDays = week.filter(d => d.dayIndex >= 1 && d.dayIndex <= 5);
+                        if (workDays.some(d => d.isCurrentMonth)) {
+                            weeks.push(workDays);
+                        }
+                        if (currentDate > lastDay && currentDate.getDay() === 1) break;
+                    }
+                    return weeks;
+                });
+
+                const prevCalendarMonth = () => {
+                    if (calendarMonth.value === 0) {
+                        calendarMonth.value = 11;
+                        calendarYear.value--;
+                    } else {
+                        calendarMonth.value--;
+                    }
+                };
+
+                const nextCalendarMonth = () => {
+                    if (calendarMonth.value === 11) {
+                        calendarMonth.value = 0;
+                        calendarYear.value++;
+                    } else {
+                        calendarMonth.value++;
+                    }
+                };
+
 
                 const addDailyPlanTodayItem = () => { dailyPlanToday.value.push({ id: Date.now(), menuId: '', peopleCount: 30 }); };
                 const removeDailyPlanTodayItem = (idx) => { dailyPlanToday.value.splice(idx, 1); };
@@ -665,6 +719,9 @@ export default {
                             if (data.dailyPlanTomorrow) dailyPlanTomorrow.value = data.dailyPlanTomorrow;
                             if (data.dailyActuals) dailyActuals.value = data.dailyActuals;
                             if (data.bentoDestinations) bentoDestinations.value = data.bentoDestinations;
+                            if (data.calendarData) calendarData.value = data.calendarData;
+                            if (data.calendarYear !== undefined) calendarYear.value = data.calendarYear;
+                            if (data.calendarMonth !== undefined) calendarMonth.value = data.calendarMonth;
 
                             
                             // If they have ingredients, they don't need the guide anymore
@@ -697,7 +754,10 @@ export default {
                             dailyPlanToday: dailyPlanToday.value,
                             dailyPlanTomorrow: dailyPlanTomorrow.value,
                             dailyActuals: dailyActuals.value,
-                            bentoDestinations: bentoDestinations.value
+                            bentoDestinations: bentoDestinations.value,
+                            calendarData: calendarData.value,
+                            calendarYear: calendarYear.value,
+                            calendarMonth: calendarMonth.value
                         }));
                         await setDoc(doc(db, 'users', user.value.uid), plainData);
                     } catch (e) {
@@ -717,7 +777,7 @@ export default {
                     });
                 });
 
-                watch([ingredients, recipes, menus, weeklyPlan, dailyPlanToday, dailyPlanTomorrow, bentoDestinations], () => {
+                watch([ingredients, recipes, menus, weeklyPlan, dailyPlanToday, dailyPlanTomorrow, bentoDestinations, calendarData, calendarYear, calendarMonth], () => {
                     saveData();
                 }, { deep: true });
 
@@ -753,6 +813,7 @@ export default {
                     dailyPlanToday, dailyPlanTomorrow, dailyActuals, addDailyPlanTodayItem, removeDailyPlanTodayItem,
                     addDailyPlanTomorrowItem, removeDailyPlanTomorrowItem, todayExpectedIngredients, todayExpectedIngredientsByMenu, showActualsModal, tomorrowPrepRecipes, deductStock,
                     bentoDestinations, bentoSubtotal1, bentoSubtotal2, bentoSubtotal3, bentoGrandTotal,
+                    calendarYear, calendarMonth, calendarWeeks, prevCalendarMonth, nextCalendarMonth, calendarData,
 
                     getIngById, getIngName, getRecipeById, getRecipeName, consumeStock, printCalculation
                 };
@@ -798,6 +859,7 @@ export default {
                 <li :class="{ active: currentTab === 'menus' }" @click="currentTab = 'menus'">お弁当メニュー</li>
                 <li :class="{ active: currentTab === 'daily' }" @click="currentTab = 'daily'">日々の作業・実績</li>
                 <li :class="{ active: currentTab === 'shopping' }" @click="currentTab = 'shopping'">週間仕入れ</li>
+                <li :class="{ active: currentTab === 'calendar' }" @click="currentTab = 'calendar'">月間カレンダー</li>
             </ul>
         <button class="btn btn-danger logout-btn" @click="handleLogout">ログアウト</button>
         </nav>
@@ -1398,6 +1460,7 @@ export default {
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <!-- TAB: Weekly Shopping -->
@@ -1470,7 +1533,6 @@ export default {
                 </div>
             </div>
 
-
             <!-- Modal for Actuals Input -->
             <div v-if="showActualsModal" class="modal-overlay" @click.self="showActualsModal = false">
                 <div class="modal-content" style="max-width: 800px; width: 95%;">
@@ -1504,6 +1566,81 @@ export default {
                     <div style="display: flex; gap: 0.5rem;">
                         <button class="btn btn-primary" style="flex: 1; padding: 1rem;" @click="deductStock">確定して在庫を減らす</button>
                         <button class="btn" style="flex: 1; background: var(--surface); color: var(--text); padding: 1rem;" @click="showActualsModal = false">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentTab === 'calendar'" class="tab-pane">
+                <header class="no-print" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <h1>月間配送カレンダー</h1>
+                        <p>PCで数値を入力し、A4タテで3列に並んだカレンダーを印刷できます。</p>
+                    </div>
+                    <button class="btn" style="background: var(--surface); color: var(--text); padding: 0.5rem 1rem; margin-bottom: 1rem;" onclick="window.print()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.25rem;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                        A4印刷・PDF保存
+                    </button>
+                </header>
+
+                <div class="print-header" style="display: none;">
+                    <h1>月間配送カレンダー</h1>
+                </div>
+
+                <!-- Monthly Calendar Print Section -->
+                <div class="card page-break" style="margin-bottom: 2rem;">
+                    <div class="no-print" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="margin-bottom: 0.25rem;">月間配送カレンダー (PC入力・印刷用)</h3>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button class="btn" @click="prevCalendarMonth">◀ 前月</button>
+                            <strong style="font-size: 1.2rem;">{{ calendarYear }}年 {{ calendarMonth + 1 }}月</strong>
+                            <button class="btn" @click="nextCalendarMonth">次月 ▶</button>
+                        </div>
+                    </div>
+                    
+                    <div v-for="copy in 2" :key="copy" :class="{ 'print-only': copy === 2 }" :style="{ marginBottom: copy === 1 ? '2rem' : '0' }">
+                        <div class="print-calendar-container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;">
+                            <div v-for="dest in ['ファミリア', 'はじめ', '貴志川', '合計']" :key="dest" style="min-width: 0;">
+                                <h4 style="text-align: center; margin-bottom: 0.5rem; font-size: 1.2rem;">{{ dest }}</h4>
+                                <table style="width: 100%; border-collapse: collapse; text-align: center; border: 2px solid #333; table-layout: fixed;">
+                                    <thead>
+                                        <tr style="background: #f8fafc;">
+                                            <th style="border: 1px solid #333; padding: 2px 0; font-size: 0.8rem;">月</th>
+                                            <th style="border: 1px solid #333; padding: 2px 0; font-size: 0.8rem;">火</th>
+                                            <th style="border: 1px solid #333; padding: 2px 0; font-size: 0.8rem;">水</th>
+                                            <th style="border: 1px solid #333; padding: 2px 0; font-size: 0.8rem;">木</th>
+                                            <th style="border: 1px solid #333; padding: 2px 0; font-size: 0.8rem;">金</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="(week, wIdx) in calendarWeeks" :key="wIdx">
+                                            <td class="calendar-cell" v-for="d in 5" :key="d" style="border: 1px solid #333; height: 50px; vertical-align: top; padding: 2px;">
+                                                <template v-if="week[d-1] && week[d-1].isCurrentMonth">
+                                                    <div style="text-align: left; font-size: 0.7rem; color: #333; line-height: 1;">{{ week[d-1].dateNum }}</div>
+                                                    <div style="margin-top: 2px; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                                        <template v-if="dest === '合計'">
+                                                            <div class="calendar-input" style="width: 100%; min-width: 0; height: 30px; line-height: 30px; text-align: center; font-size: 1.2rem; font-weight: bold; border: none; background: transparent; color: var(--primary);">
+                                                                {{ 
+                                                                    ((calendarData[calendarYear + '-' + (calendarMonth+1) + '-' + week[d-1].dateNum + '-ファミリア'] || 0) + 
+                                                                    (calendarData[calendarYear + '-' + (calendarMonth+1) + '-' + week[d-1].dateNum + '-はじめ'] || 0) + 
+                                                                    (calendarData[calendarYear + '-' + (calendarMonth+1) + '-' + week[d-1].dateNum + '-貴志川'] || 0)) || ''
+                                                                }}
+                                                            </div>
+                                                        </template>
+                                                        <template v-else>
+                                                            <input class="calendar-input" type="number" v-model.number="calendarData[calendarYear + '-' + (calendarMonth+1) + '-' + week[d-1].dateNum + '-' + dest]" style="width: 100%; min-width: 0; height: 30px; text-align: center; font-size: 1.2rem; font-weight: bold; border: none; background: transparent; outline: none; padding: 0; box-sizing: border-box;">
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <hr class="print-only-hr" v-if="copy === 1" style="margin-top: 3rem; border: none; border-top: 1px dashed #ccc;" />
                     </div>
                 </div>
             </div>
