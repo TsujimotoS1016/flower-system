@@ -336,12 +336,14 @@
             
             /* Make tables horizontally scrollable on mobile */
             .table-container {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
+                overflow-x: hidden;
                 margin: 0 -1rem;
-                padding: 0 1rem;
+                padding: 0 0.5rem;
             }
-            table { min-width: 600px; }
+            table { min-width: 100%; width: 100%; font-size: 0.85rem; }
+            .list-table th, .list-table td { padding: 0.4rem 0.2rem; }
+            .list-table input[type="number"] { width: 55px !important; padding: 0.2rem !important; font-size: 0.85rem; }
+            .list-table .btn { padding: 0.25rem 0.4rem; font-size: 0.75rem; }
             
             .flex-row { flex-direction: column; align-items: stretch; }
         }

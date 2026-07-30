@@ -970,7 +970,7 @@ export default {
                                         <template v-if="ing.hasPackage">
                                             <input type="number" :value="Math.round((ing.stock / ing.pkgAmount) * 100) / 100" @input="ing.stock = $event.target.value * ing.pkgAmount" min="0" step="1" style="width:80px; padding: 0.4rem;">
                                             {{ ing.pkgUnit }}
-                                            <span style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">
+                                            <span class="hide-on-mobile" style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">
                                                 (約 {{ Math.round(ing.stock * 10) / 10 }} {{ ing.unit }})
                                             </span>
                                         </template>
