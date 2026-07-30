@@ -113,6 +113,46 @@ export default {
                 });
 
                 const shoppingList = computed(() => calculationResults.value.filter(i => i.missing > 0));
+
+                // --- 明日の仕込み（レシピの人数換算）用ロジック ---
+                const prepItems = ref([{ id: Date.now(), recipeId: '', servings: 1 }]);
+                const addPrepItem = () => {
+                    prepItems.value.push({ id: Date.now(), recipeId: '', servings: 1 });
+                };
+                const removePrepItem = (index) => {
+                    prepItems.value.splice(index, 1);
+                };
+                const prepCalculationResults = computed(() => {
+                    const requiredMap = new Map();
+                    
+                    prepItems.value.forEach(prep => {
+                        if (!prep.recipeId) return;
+                        const recipe = recipes.value.find(r => r.id === prep.recipeId);
+                        if (!recipe) return;
+                        
+                        recipe.items.forEach(recipeItem => {
+                            const ingId = recipeItem.ingredientId;
+                            const totalAmount = (recipeItem.amount / (recipe.servings || 1)) * prep.servings;
+                            
+                            if (requiredMap.has(ingId)) {
+                                requiredMap.get(ingId).total += totalAmount;
+                            } else {
+                                requiredMap.set(ingId, { total: totalAmount });
+                            }
+                        });
+                    });
+                    
+                    const results = [];
+                    for (const [ingId, data] of requiredMap.entries()) {
+                        const ing = ingredients.value.find(i => i.id === ingId);
+                        if (!ing) continue;
+                        results.push({
+                            ...ing,
+                            required: data.total
+                        });
+                    }
+                    return results;
+                });
                 const sufficientList = computed(() => calculationResults.value.filter(i => i.missing === 0));
 
                 const formatAmount = (amount, unit, gPerUnit, raw = false) => {
@@ -802,6 +842,7 @@ export default {
                     sortedIngredients, sortedRecipes, sortedMenus, sortOrder, showAddIngredientForm, openAddIngredientForm, showAddRecipeForm, openAddRecipeForm, showAddMenuForm, openAddMenuForm,
                     currentTab, ingredients, recipes, menus, selectedCalcItems, addCalcItem, removeCalcItem, getMenuById, hasAnyMemos, 
                     calculationResults, shoppingList, sufficientList, formatAmount, 
+                    prepItems, addPrepItem, removePrepItem, prepCalculationResults,
                     newIngredient, addIngredient, removeIngredient, editingIngredientId, editIngredient, cancelEditIngredient, updateIngredient,
                     newRecipe, newRecipeItem, addNewRecipe, removeRecipe, addIngredientToNewRecipe, removeIngredientFromNewRecipe, editingRecipeId, editRecipe, cancelEditRecipe, updateRecipe,
                     newMenu, newMenuItem, addNewMenu, removeMenu, addRecipeToNewMenu, removeRecipeFromNewMenu, editingMenuId, editMenu, cancelEditMenu, updateMenu, 
@@ -870,8 +911,8 @@ export default {
                     <span>メニュー</span>
                 </li>
                 <li :class="{ active: currentTab === 'mobile_only', 'show-on-mobile': true }" @click="currentTab = 'mobile_only'">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-                    <span>スマホ用</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16.01" y2="14"></line><line x1="16" y1="18" x2="16.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="8" y1="14" x2="8.01" y2="14"></line><line x1="8" y1="18" x2="8.01" y2="18"></line></svg>
+                    <span>仕込み</span>
                 </li>
                 <li :class="{ active: currentTab === 'daily', 'hide-on-mobile': true }" @click="currentTab = 'daily'">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
@@ -893,17 +934,43 @@ export default {
         <!-- Main Content -->
         <main class="main-content">
 
-            <!-- TAB: Mobile Only (Dummy) -->
+            <!-- TAB: Prep (Mobile Only) -->
             <div v-if="currentTab === 'mobile_only'" class="tab-pane show-on-mobile">
                 <header>
-                    <h1>スマホ専用メニュー</h1>
-                    <p>このタブはモバイル版だけで表示されます。ここに入れたい機能をご指示ください。</p>
+                    <h1>明日の仕込み計算</h1>
+                    <p>レシピと作る人数を選んで、必要な材料を計算します。</p>
                 </header>
-                <div class="card">
-                    <p style="text-align:center; padding:2rem; color:var(--text-muted);">
-                        準備中...<br>
-                        （例: 簡易ダッシュボード、スマホ用の特別な入力フォーム等）
-                    </p>
+                <div class="card" style="margin-bottom: 1rem;">
+                    <div v-for="(item, idx) in prepItems" :key="item.id" class="form-group" style="margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border);">
+                        <label>レシピ</label>
+                        <select v-model="item.recipeId" style="margin-bottom:0.5rem;">
+                            <option value="">選択してください</option>
+                            <option v-for="r in sortedRecipes" :key="r.id" :value="r.id">{{ r.name }}</option>
+                        </select>
+                        <div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem;">
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <label style="margin:0;">人数:</label>
+                                <input type="number" v-model.number="item.servings" min="1" step="1" style="width:80px !important;">
+                            </div>
+                            <button class="btn btn-danger" @click="removePrepItem(idx)">削除</button>
+                        </div>
+                    </div>
+                    <button class="btn" style="width:100%; border:2px dashed var(--primary); background:transparent; color:var(--primary);" @click="addPrepItem">+ レシピを追加</button>
+                </div>
+
+                <div class="card" v-if="prepCalculationResults.length > 0">
+                    <h2 style="font-size:1.2rem; margin-bottom:1rem; color:var(--primary-dark);">必要な材料</h2>
+                    <ul style="list-style:none;">
+                        <li v-for="(res, idx) in prepCalculationResults" :key="idx" style="padding:0.75rem 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:600;">{{ res.name }}</span>
+                            <div style="text-align:right;">
+                                <strong style="font-size:1.1rem; color:var(--primary-dark);">{{ formatAmount(res.required, res.unit, res.gPerUnit) }}</strong>
+                                <div v-if="res.hasPackage && res.pkgAmount > 0" style="font-size:0.8rem; color:var(--text-muted);">
+                                    (約 {{ Math.ceil(res.required / res.pkgAmount) }}{{ res.pkgUnit }})
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
