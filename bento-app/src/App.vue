@@ -525,9 +525,10 @@ export default {
                 const dailyPlanTomorrow = ref([]);
                 const dailyActuals = ref({});
                 const bentoDestinations = ref({
-                    date: '', no1: '', no2: '', no3: '', no4: '', no5: '', no6: '', honsha: '',
+                    date: new Date().toISOString().split('T')[0], no1: '', no2: '', no3: '', no4: '', no5: '', no6: '', honsha: '',
                     e: '', w: '', familia: '', hajime: '', kishigawa: ''
                 });
+                const bentoDestinationsHistory = ref({});
 
                 
                 const addWeeklyPlanItem = () => {
@@ -541,6 +542,62 @@ export default {
                 const bentoSubtotal2 = computed(() => Number(bentoDestinations.value.e||0) + Number(bentoDestinations.value.w||0));
                 const bentoSubtotal3 = computed(() => Number(bentoDestinations.value.familia||0) + Number(bentoDestinations.value.hajime||0) + Number(bentoDestinations.value.kishigawa||0));
                 const bentoGrandTotal = computed(() => bentoSubtotal1.value + bentoSubtotal2.value + bentoSubtotal3.value);
+
+                const showMonthlySummaryModal = ref(false);
+
+                const monthlySummaryData = computed(() => {
+                    const currentDate = new Date(bentoDestinations.value.date || new Date());
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                    
+                    const rows = [];
+                    let sum1 = 0, sum2 = 0, sum3 = 0;
+                    
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const date = new Date(year, month, d);
+                        const dayName = dayNames[date.getDay()];
+                        
+                        const mm = String(month + 1).padStart(2, '0');
+                        const dd = String(d).padStart(2, '0');
+                        const dateStr = `${year}-${mm}-${dd}`;
+                        
+                        let val1 = 0;
+                        let val2 = 0;
+                        let val3 = 0;
+                        
+                        const hist = bentoDestinationsHistory.value[dateStr];
+                        if (hist) {
+                            val1 = Number(hist.no1||0) + Number(hist.no2||0) + Number(hist.no3||0) + Number(hist.no4||0) + Number(hist.no5||0) + Number(hist.no6||0) + Number(hist.honsha||0);
+                            val2 = Number(hist.e||0) + Number(hist.w||0);
+                            val3 = Number(hist.familia||0) + Number(hist.hajime||0) + Number(hist.kishigawa||0);
+                        }
+                        
+                        sum1 += val1;
+                        sum2 += val2;
+                        sum3 += val3;
+                        
+                        rows.push({
+                            day: d,
+                            dayName: dayName,
+                            isWeekend: date.getDay() === 0 || date.getDay() === 6,
+                            val1: val1 || '',
+                            val2: val2 || '',
+                            val3: val3 || ''
+                        });
+                    }
+                    
+                    return {
+                        year,
+                        month: month + 1,
+                        rows,
+                        total1: sum1,
+                        total2: sum2,
+                        total3: sum3
+                    };
+                });
 
                 const calendarYear = ref(new Date().getFullYear());
                 const calendarMonth = ref(new Date().getMonth());
@@ -784,6 +841,7 @@ export default {
                             if (data.dailyPlanTomorrow) dailyPlanTomorrow.value = data.dailyPlanTomorrow;
                             if (data.dailyActuals) dailyActuals.value = data.dailyActuals;
                             if (data.bentoDestinations) bentoDestinations.value = data.bentoDestinations;
+                            if (data.bentoDestinationsHistory) bentoDestinationsHistory.value = data.bentoDestinationsHistory;
                             if (data.calendarData) calendarData.value = data.calendarData;
                             if (data.calendarYear !== undefined) calendarYear.value = data.calendarYear;
                             if (data.calendarMonth !== undefined) calendarMonth.value = data.calendarMonth;
@@ -820,6 +878,7 @@ export default {
                             dailyPlanTomorrow: dailyPlanTomorrow.value,
                             dailyActuals: dailyActuals.value,
                             bentoDestinations: bentoDestinations.value,
+                            bentoDestinationsHistory: bentoDestinationsHistory.value,
                             calendarData: calendarData.value,
                             calendarYear: calendarYear.value,
                             calendarMonth: calendarMonth.value
@@ -829,6 +888,54 @@ export default {
                         console.error("Error saving data:", e);
                         alert("保存エラーが発生しました: " + e.message);
                     }
+                };
+
+                const downloadMonthlyCsv = () => {
+                    const currentDate = new Date(bentoDestinations.value.date || new Date());
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    
+                    let csvContent = "月,日,曜日,西尾組,自動車部,直心会\n";
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+                    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                    
+                    let sum1 = 0, sum2 = 0, sum3 = 0;
+                    
+                    for (let d = 1; d <= daysInMonth; d++) {
+                        const date = new Date(year, month, d);
+                        const dayName = dayNames[date.getDay()];
+                        
+                        const mm = String(month + 1).padStart(2, '0');
+                        const dd = String(d).padStart(2, '0');
+                        const dateStr = `${year}-${mm}-${dd}`;
+                        
+                        let val1 = 0;
+                        let val2 = 0;
+                        let val3 = 0;
+                        
+                        const hist = bentoDestinationsHistory.value[dateStr];
+                        if (hist) {
+                            val1 = Number(hist.no1||0) + Number(hist.no2||0) + Number(hist.no3||0) + Number(hist.no4||0) + Number(hist.no5||0) + Number(hist.no6||0) + Number(hist.honsha||0);
+                            val2 = Number(hist.e||0) + Number(hist.w||0);
+                            val3 = Number(hist.familia||0) + Number(hist.hajime||0) + Number(hist.kishigawa||0);
+                        }
+                        
+                        sum1 += val1;
+                        sum2 += val2;
+                        sum3 += val3;
+                        
+                        csvContent += `${month + 1},${d},${dayName},${val1 || ''},${val2 || ''},${val3 || ''}\n`;
+                    }
+                    
+                    csvContent += `,,,${sum1},${sum2},${sum3}\n`;
+                    
+                    const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+                    const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `フラワー_${month + 1}月お弁当個数.csv`;
+                    link.click();
+                    URL.revokeObjectURL(link.href);
                 };
 
                 onMounted(() => {
@@ -842,8 +949,28 @@ export default {
                     });
                 });
 
-                watch([ingredients, recipes, menus, weeklyPlan, dailyPlanToday, dailyPlanTomorrow, bentoDestinations, calendarData, calendarYear, calendarMonth], () => {
+                watch([ingredients, recipes, menus, weeklyPlan, dailyPlanToday, dailyPlanTomorrow, bentoDestinations, bentoDestinationsHistory, calendarData, calendarYear, calendarMonth], () => {
                     saveData();
+                }, { deep: true });
+
+                watch(() => bentoDestinations.value.date, (newDate) => {
+                    if (newDate && bentoDestinationsHistory.value[newDate]) {
+                        const hist = bentoDestinationsHistory.value[newDate];
+                        Object.keys(hist).forEach(k => {
+                            if (k !== 'date') bentoDestinations.value[k] = hist[k];
+                        });
+                    } else if (newDate) {
+                        // Clear out values if switching to a new date with no history
+                        Object.keys(bentoDestinations.value).forEach(k => {
+                            if (k !== 'date') bentoDestinations.value[k] = '';
+                        });
+                    }
+                });
+
+                watch(bentoDestinations, (newVal) => {
+                    if (newVal.date) {
+                        bentoDestinationsHistory.value[newVal.date] = JSON.parse(JSON.stringify(newVal));
+                    }
                 }, { deep: true });
 
                 const handleLogin = async () => {
@@ -878,7 +1005,8 @@ export default {
                     weeklyPlan, addWeeklyPlanItem, removeWeeklyPlanItem, weeklyShoppingList,
                     dailyPlanToday, dailyPlanTomorrow, dailyActuals, addDailyPlanTodayItem, removeDailyPlanTodayItem,
                     addDailyPlanTomorrowItem, removeDailyPlanTomorrowItem, todayExpectedIngredients, todayExpectedIngredientsByMenu, showActualsModal, tomorrowPrepRecipes, deductStock,
-                    bentoDestinations, bentoSubtotal1, bentoSubtotal2, bentoSubtotal3, bentoGrandTotal,
+                    bentoDestinations, bentoDestinationsHistory, bentoSubtotal1, bentoSubtotal2, bentoSubtotal3, bentoGrandTotal, downloadMonthlyCsv,
+                    showMonthlySummaryModal, monthlySummaryData,
                     calendarYear, calendarMonth, calendarWeeks, prevCalendarMonth, nextCalendarMonth, calendarData,
 
                     getIngById, getIngName, getRecipeById, getRecipeName, consumeStock, printCalculation
@@ -965,7 +1093,7 @@ export default {
 
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content" :class="{ 'printing-modal': showMonthlySummaryModal }">
 
             <!-- TAB: Prep (Mobile Only) -->
             <div v-if="currentTab === 'mobile_only'" class="tab-pane show-on-mobile">
@@ -1459,8 +1587,11 @@ export default {
                         <h3 style="margin: 0; margin-right: 1rem;">配達先別 個数表</h3>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <label style="font-weight: bold; margin-bottom: 0;">日付:</label>
-                            <input type="text" v-model="bentoDestinations.date" placeholder="例: 7/30 (木)" style="width: 150px; padding: 0.25rem 0.5rem; font-size: 1rem; border: none; border-bottom: 2px solid #333; border-radius: 0; background: transparent; outline: none;">
+                            <input type="date" v-model="bentoDestinations.date" style="padding: 0.25rem 0.5rem; font-size: 1rem; border: none; border-bottom: 2px solid #333; border-radius: 0; background: transparent; outline: none;">
                         </div>
+                        <button class="btn btn-secondary no-print" style="margin-left: auto; padding: 0.4rem 0.8rem; font-size: 0.95rem; background: var(--primary); color: white; border: none; border-radius: 4px;" @click="showMonthlySummaryModal = true">
+                            月間集計表を開く
+                        </button>
                     </div>
                     
                     <table class="tally-table" style="width: 100%; border-collapse: collapse; text-align: center; border: 2px solid #333; margin-bottom: 1rem;">
@@ -1794,6 +1925,57 @@ export default {
                 </div>
             </div>
         </main>
+        
+        <!-- 月間集計表モーダル -->
+        <div class="modal" v-if="showMonthlySummaryModal">
+            <div class="modal-content print-modal-content" style="max-width: 900px; padding: 2rem;">
+                <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin: 0; color: var(--primary-dark);">月間集計表</h2>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" @click="downloadMonthlyCsv">CSV出力</button>
+                        <button class="btn btn-primary" onclick="window.print()">印刷する</button>
+                        <button class="btn btn-secondary" @click="showMonthlySummaryModal = false">閉じる</button>
+                    </div>
+                </div>
+
+                <div class="print-area">
+                    <h2 class="monthly-summary-title">フラワー {{ monthlySummaryData.month }}月お弁当個数</h2>
+                    <table class="monthly-summary-table">
+                        <thead>
+                            <tr>
+                                <th>月</th>
+                                <th>日</th>
+                                <th>曜日</th>
+                                <th>西尾組</th>
+                                <th>自動車部</th>
+                                <th>直心会</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="row in monthlySummaryData.rows" :key="row.day" :class="{ 'weekend-row': row.isWeekend }">
+                                <td>{{ monthlySummaryData.month }}</td>
+                                <td>{{ row.day }}</td>
+                                <td style="text-align: center;">{{ row.dayName }}</td>
+                                <td>{{ row.val1 }}</td>
+                                <td>{{ row.val2 }}</td>
+                                <td>{{ row.val3 }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>{{ monthlySummaryData.total1 }}</td>
+                                <td>{{ monthlySummaryData.total2 }}</td>
+                                <td>{{ monthlySummaryData.total3 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
     </template>
-  </div>
+</div>
 </template>
