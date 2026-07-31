@@ -1212,11 +1212,23 @@ export default {
                                 <td>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <template v-if="ing.hasPackage">
-                                            <input type="number" :value="Math.round((ing.stock / ing.pkgAmount) * 100) / 100" @input="ing.stock = $event.target.value * ing.pkgAmount" min="0" step="1" style="width:80px; padding: 0.4rem;">
-                                            {{ ing.pkgUnit }}
-                                            <span class="hide-on-mobile" style="font-size: 0.85rem; color: var(--text-muted); margin-left: 0.5rem;">
-                                                (約 {{ Math.round(ing.stock * 10) / 10 }} {{ ing.unit }})
-                                            </span>
+                                            <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
+                                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                                    <input type="number" 
+                                                           :value="Math.floor((ing.stock || 0) / ing.pkgAmount)" 
+                                                           @input="ing.stock = (Number($event.target.value) * ing.pkgAmount) + ((ing.stock || 0) - Math.floor((ing.stock || 0) / ing.pkgAmount) * ing.pkgAmount)" 
+                                                           min="0" step="1" style="width:70px; padding: 0.4rem;">
+                                                    <span>{{ ing.pkgUnit }}</span>
+                                                </div>
+                                                <span style="font-weight: bold; color: var(--text-muted);">+</span>
+                                                <div style="display: flex; align-items: center; gap: 0.25rem;">
+                                                    <input type="number" 
+                                                           :value="Math.round(((ing.stock || 0) - Math.floor((ing.stock || 0) / ing.pkgAmount) * ing.pkgAmount) * 100) / 100" 
+                                                           @input="ing.stock = (Math.floor((ing.stock || 0) / ing.pkgAmount) * ing.pkgAmount) + Number($event.target.value)" 
+                                                           min="0" step="1" style="width:70px; padding: 0.4rem;">
+                                                    <span>{{ ing.unit }}</span>
+                                                </div>
+                                            </div>
                                         </template>
                                         <template v-else>
                                             <input type="number" v-model.number="ing.stock" min="0" step="1" style="width:80px; padding: 0.4rem;">
