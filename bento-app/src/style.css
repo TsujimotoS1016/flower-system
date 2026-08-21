@@ -569,11 +569,42 @@ textarea:focus {
         display: none !important;
     }
     .shopping-list-table {
-        font-size: 12px !important;
-        line-height: 1.2 !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        border: none !important;
     }
-    .shopping-list-table th, .shopping-list-table td {
-        padding: 4px 6px !important;
+    .shopping-list-table thead {
+        display: none !important;
+    }
+    .shopping-list-table tbody {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+    }
+    .shopping-list-table tr:not(.print-hide-row) {
+        display: flex !important;
+        width: 48% !important;
+        margin-right: 2% !important;
+        margin-bottom: 2px !important;
+        border: none !important;
+        border-bottom: 1px dashed #999 !important;
+        padding: 4px 0 !important;
+        box-sizing: border-box !important;
+    }
+    .shopping-list-table td {
+        display: flex !important;
+        align-items: center !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+    .shopping-list-table td:nth-child(1) {
+        width: 60% !important;
+        font-size: 14px !important;
+    }
+    .shopping-list-table td:nth-child(4) {
+        width: 40% !important;
+        justify-content: flex-end !important;
     }
     .no-print-bg {
         background: transparent !important;
