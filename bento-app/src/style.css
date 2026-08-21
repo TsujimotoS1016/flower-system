@@ -781,6 +781,7 @@ textarea:focus {
     outline: none;
     background: transparent;
     padding: 0;
+    height: 3rem;
 }
 
 .tally-input:focus {

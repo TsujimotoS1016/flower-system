@@ -27,17 +27,18 @@ export default {
                 const showAddMenuForm = ref(false);
 
                 const sortOrder = ref('added');
+                const shoppingSortOrder = ref('shortage');
                 
                 const sortedIngredients = computed(() => {
-                    if (sortOrder.value === 'added') return ingredients.value;
+                    if (sortOrder.value === 'added') return [...ingredients.value];
                     return [...ingredients.value].sort((a, b) => ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja'));
                 });
                 const sortedRecipes = computed(() => {
-                    if (sortOrder.value === 'added') return recipes.value;
+                    if (sortOrder.value === 'added') return [...recipes.value];
                     return [...recipes.value].sort((a, b) => ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja'));
                 });
                 const sortedMenus = computed(() => {
-                    if (sortOrder.value === 'added') return menus.value;
+                    if (sortOrder.value === 'added') return [...menus.value];
                     return [...menus.value].sort((a, b) => ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja'));
                 });
 
@@ -774,6 +775,24 @@ export default {
                     dailyActuals.value = {};
                 };
 
+                const draggedIngredientIndex = ref(-1);
+
+                const onDragStart = (e, idx) => {
+                    if (sortOrder.value !== 'added') return;
+                    draggedIngredientIndex.value = idx;
+                    e.dataTransfer.effectAllowed = 'move';
+                };
+
+                const onDrop = (e, dropIdx) => {
+                    if (sortOrder.value !== 'added') return;
+                    if (draggedIngredientIndex.value > -1 && draggedIngredientIndex.value !== dropIdx) {
+                        const temp = ingredients.value.splice(draggedIngredientIndex.value, 1)[0];
+                        ingredients.value.splice(dropIdx, 0, temp);
+                        saveData();
+                    }
+                    draggedIngredientIndex.value = -1;
+                };
+
                 const weeklyShoppingList = computed(() => {
 
                     const req = {};
@@ -822,7 +841,20 @@ export default {
                         });
                     });
 
-                    return list.sort((a, b) => b.shortage - a.shortage);
+                    if (shoppingSortOrder.value === 'custom') {
+                        return list.sort((a, b) => {
+                            const indexA = ingredients.value.findIndex(i => i.id === a.id);
+                            const indexB = ingredients.value.findIndex(i => i.id === b.id);
+                            return indexA - indexB;
+                        });
+                    }
+                    if (shoppingSortOrder.value === 'yomi') {
+                        return list.sort((a, b) => ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja'));
+                    }
+                    return list.sort((a, b) => {
+                        if (b.shortage !== a.shortage) return b.shortage - a.shortage;
+                        return ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja');
+                    });
                 });
 
                 // データのロードと保存処理
@@ -1002,7 +1034,7 @@ export default {
                     onCompositionUpdate, onCompositionEnd, onInputName,
                     user, authMode, authEmail, authPassword, authError, handleLogin, handleLogout,
 
-                    weeklyPlan, addWeeklyPlanItem, removeWeeklyPlanItem, weeklyShoppingList,
+                    weeklyPlan, addWeeklyPlanItem, removeWeeklyPlanItem, weeklyShoppingList, shoppingSortOrder, draggedIngredientIndex, onDragStart, onDrop,
                     dailyPlanToday, dailyPlanTomorrow, dailyActuals, addDailyPlanTodayItem, removeDailyPlanTodayItem,
                     addDailyPlanTomorrowItem, removeDailyPlanTomorrowItem, todayExpectedIngredients, todayExpectedIngredientsByMenu, showActualsModal, tomorrowPrepRecipes, deductStock,
                     bentoDestinations, bentoDestinationsHistory, bentoSubtotal1, bentoSubtotal2, bentoSubtotal3, bentoGrandTotal, downloadMonthlyCsv,
@@ -1177,7 +1209,7 @@ export default {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M7 12h10"></path><path d="M10 18h4"></path></svg>
                         並び順:
                         <select v-model="sortOrder" style="padding: 0.2rem; border:none; background:transparent; color: var(--primary); font-weight: 600; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none;">
-                            <option value="added">追加した順</option>
+                            <option value="added">追加した順（手動並べ替え）</option>
                             <option value="alphabetical">あいうえお順</option>
                         </select>
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-4px;"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -1201,7 +1233,14 @@ export default {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="ing in sortedIngredients" :key="ing.id">
+                            <tr v-for="(ing, idx) in sortedIngredients" :key="ing.id"
+                                :draggable="sortOrder === 'added'"
+                                @dragstart="onDragStart($event, idx)"
+                                @dragover.prevent
+                                @dragenter.prevent
+                                @drop="onDrop($event, idx)"
+                                :style="sortOrder === 'added' ? 'cursor: grab; ' + (draggedIngredientIndex === idx ? 'opacity: 0.5;' : '') : ''"
+                            >
                                 <td style="font-weight: 600;">{{ ing.name }}</td>
                                 <td class="hide-on-mobile">{{ ing.unit }}</td>
                                 <td class="hide-on-mobile">
@@ -1238,6 +1277,7 @@ export default {
                                 </td>
                                 <td>
                                     <div style="display:flex; gap: 0.5rem;">
+
                                         <button class="btn" style="padding: 0.25rem 0.5rem; background: var(--surface); color: var(--text);" @click="editIngredient(ing)">編集</button>
                                         <button class="btn btn-danger" style="padding: 0.25rem 0.5rem;" @click="removeIngredient(ing.id)">削除</button>
                                     </div>
@@ -1786,7 +1826,17 @@ export default {
                 </div>
 
                 <div class="card">
-                    <h3>2. お買い物リスト</h3>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <h3 style="margin: 0;">2. お買い物リスト</h3>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-muted); white-space: nowrap;">並び替え:</label>
+                            <select v-model="shoppingSortOrder" style="padding: 0.25rem 0.5rem; font-size: 0.9rem; border-radius: 4px; border: 1px solid #ddd;">
+                                <option value="shortage">買うべきもの優先</option>
+                                <option value="custom">手動（在庫マスターの順番）</option>
+                                <option value="yomi">あいうえお順</option>
+                            </select>
+                        </div>
+                    </div>
                     <div v-if="weeklyShoppingList.length === 0" style="margin-top: 1rem; color: var(--text-muted);">
                         予定を追加すると、ここにリストが表示されます。
                     </div>
