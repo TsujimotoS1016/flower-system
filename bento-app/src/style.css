@@ -559,6 +559,9 @@ textarea:focus {
 
 /* Print Styles */
 @media print {
+    .print-hide-row {
+        display: none !important;
+    }
     @page {
         margin: 5mm;
     }

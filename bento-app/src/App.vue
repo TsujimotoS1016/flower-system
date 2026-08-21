@@ -1809,12 +1809,17 @@ export default {
             <!-- TAB: Weekly Shopping -->
 
             <div v-if="currentTab === 'shopping'" class="tab-pane">
-                <header>
-                    <h1>週間仕入れリスト（お買い物リスト）</h1>
-                    <p>1週間分の作る予定を入力すると、現在の在庫を差し引いて「買うべきもの」をリストアップします。</p>
+                <header class="no-print" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <h1 style="margin-bottom: 0.5rem;">週間仕入れリスト（お買い物リスト）</h1>
+                        <p>1週間分の作る予定を入力すると、現在の在庫を差し引いて「買うべきもの」をリストアップします。</p>
+                    </div>
+                    <button class="btn" style="background: var(--surface); color: var(--text); padding: 0.5rem 1rem; margin-bottom: 1rem;" onclick="window.print()">
+                        A4印刷・PDF保存
+                    </button>
                 </header>
                 
-                <div class="card">
+                <div class="card no-print">
                     <h3>1. 仕入れ予定の入力</h3>
                     <div style="margin-top: 1rem;">
                         <div v-for="(plan, idx) in weeklyPlan" :key="plan.id" class="flex-row" style="background:#f9fafb; padding:0.75rem; border-radius:8px; margin-bottom: 0.5rem; align-items:center;">
@@ -1862,7 +1867,7 @@ export default {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="item in weeklyShoppingList" :key="item.id" :style="item.shortage > 0 ? 'background: #fff5f5;' : ''">
+                                <tr v-for="item in weeklyShoppingList" :key="item.id" :style="item.shortage > 0 ? 'background: #fff5f5;' : ''" :class="{ 'print-hide-row': item.shortage === 0 }">
                                     <td style="font-weight: 600;">{{ item.name }}</td>
                                     <td>{{ formatAmount(item.required, item.unit, item.gPerUnit) }}</td>
                                     <td>{{ formatAmount(item.stock, item.unit, item.gPerUnit) }}</td>
