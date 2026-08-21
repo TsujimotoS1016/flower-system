@@ -562,6 +562,29 @@ textarea:focus {
     .print-hide-row {
         display: none !important;
     }
+    .hide-for-shopping-print {
+        display: none !important;
+    }
+    .shopping-list-header {
+        display: none !important;
+    }
+    .shopping-list-table {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+    }
+    .shopping-list-table th, .shopping-list-table td {
+        padding: 4px 6px !important;
+    }
+    .no-print-bg {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    .print-amount-text {
+        font-size: 14px !important;
+        color: #000 !important;
+    }
     @page {
         margin: 5mm;
     }

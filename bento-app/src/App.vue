@@ -1841,8 +1841,8 @@ export default {
                     </div>
                 </div>
 
-                <div class="card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                <div class="card no-print-bg">
+                    <div class="shopping-list-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                         <h3 style="margin: 0;">2. お買い物リスト</h3>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <label style="font-size: 0.9rem; font-weight: bold; color: var(--text-muted); white-space: nowrap;">並び替え:</label>
@@ -1857,20 +1857,20 @@ export default {
                         予定を追加すると、ここにリストが表示されます。
                     </div>
                     <div v-else style="overflow-x: auto; margin-top: 1rem;">
-                        <table class="list-table">
+                        <table class="list-table shopping-list-table">
                             <thead>
                                 <tr>
                                     <th>材料</th>
-                                    <th>1週間の必要量</th>
-                                    <th>現在庫</th>
+                                    <th class="hide-for-shopping-print">1週間の必要量</th>
+                                    <th class="hide-for-shopping-print">現在庫</th>
                                     <th>買うべき量</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="item in weeklyShoppingList" :key="item.id" :style="item.shortage > 0 ? 'background: #fff5f5;' : ''" :class="{ 'print-hide-row': item.shortage === 0 }">
                                     <td style="font-weight: 600;">{{ item.name }}</td>
-                                    <td>{{ formatAmount(item.required, item.unit, item.gPerUnit) }}</td>
-                                    <td>{{ formatAmount(item.stock, item.unit, item.gPerUnit) }}</td>
+                                    <td class="hide-for-shopping-print">{{ formatAmount(item.required, item.unit, item.gPerUnit) }}</td>
+                                    <td class="hide-for-shopping-print">{{ formatAmount(item.stock, item.unit, item.gPerUnit) }}</td>
                                     <td>
                                         <div v-if="item.shortage > 0">
                                             <div style="font-weight:bold; color: var(--danger); font-size: 1.1rem;">
