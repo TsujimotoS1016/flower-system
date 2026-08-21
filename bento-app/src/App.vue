@@ -841,18 +841,29 @@ export default {
                         });
                     });
 
-                    if (shoppingSortOrder.value === 'custom') {
-                        return list.sort((a, b) => {
+                    return list.sort((a, b) => {
+                        // 1. 常に足りていないもの（shortage > 0）を上に固める
+                        const aHasShortage = a.shortage > 0 ? 1 : 0;
+                        const bHasShortage = b.shortage > 0 ? 1 : 0;
+                        if (bHasShortage !== aHasShortage) {
+                            return bHasShortage - aHasShortage;
+                        }
+
+                        // 2. 選ばれたソート順を適用
+                        if (shoppingSortOrder.value === 'custom') {
                             const indexA = ingredients.value.findIndex(i => i.id === a.id);
                             const indexB = ingredients.value.findIndex(i => i.id === b.id);
                             return indexA - indexB;
-                        });
-                    }
-                    if (shoppingSortOrder.value === 'yomi') {
-                        return list.sort((a, b) => ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja'));
-                    }
-                    return list.sort((a, b) => {
-                        if (b.shortage !== a.shortage) return b.shortage - a.shortage;
+                        }
+                        
+                        if (shoppingSortOrder.value === 'yomi') {
+                            return ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja');
+                        }
+
+                        // default: shortage (足りない量が多い順)
+                        if (b.shortage !== a.shortage) {
+                            return b.shortage - a.shortage;
+                        }
                         return ((a.yomi || a.name) || '').localeCompare((b.yomi || b.name) || '', 'ja');
                     });
                 });
