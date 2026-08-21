@@ -1606,7 +1606,7 @@ export default {
                         </button>
                     </div>
                     
-                    <table class="tally-table" style="width: 100%; border-collapse: collapse; text-align: center; border: 2px solid #333; margin-bottom: 1rem;">
+                    <table class="tally-table" style="width: 100%; table-layout: fixed; border-collapse: collapse; text-align: center; border: 2px solid #333; margin-bottom: 1rem;">
                         <tbody>
                             <tr style="background: #f8fafc;">
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">No, 1</th>
