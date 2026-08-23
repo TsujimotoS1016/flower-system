@@ -27,7 +27,7 @@ export default {
                 const showAddMenuForm = ref(false);
 
                 const sortOrder = ref('added');
-                const shoppingSortOrder = ref('shortage');
+                const shoppingSortOrder = ref('custom');
                 
                 const sortedIngredients = computed(() => {
                     if (sortOrder.value === 'added') return [...ingredients.value];
@@ -826,7 +826,7 @@ export default {
                         if (!ing) return;
                         
                         const totalRequired = req[ingId];
-                        const shortage = Math.ceil(Math.max(0, totalRequired - ing.stock));
+                        const shortage = Math.ceil(Math.max(0, totalRequired - (Number(ing.stock) || 0)));
                         
                         let buyPackages = 0;
                         if (shortage > 0 && ing.hasPackage && ing.pkgAmount > 0) {
