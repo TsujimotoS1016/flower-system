@@ -1265,23 +1265,23 @@ export default {
                                             <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
                                                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                                                     <input type="number" 
-                                                           :value="Math.floor((ing.stock || 0) / ing.pkgAmount)" 
-                                                           @input="ing.stock = (Number($event.target.value) * ing.pkgAmount) + ((ing.stock || 0) - Math.floor((ing.stock || 0) / ing.pkgAmount) * ing.pkgAmount)" 
+                                                           :value="Math.floor((ing.stock || 0) / (ing.pkgAmount || 1))" 
+                                                           @input="ing.stock = (Number($event.target.value) * (ing.pkgAmount || 1)) + ((ing.stock || 0) - Math.floor((ing.stock || 0) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1))" 
                                                            min="0" step="1" style="width:70px; padding: 0.4rem;">
                                                     <span>{{ ing.pkgUnit }}</span>
                                                 </div>
                                                 <span style="font-weight: bold; color: var(--text-muted);">+</span>
                                                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                                                     <input type="number" 
-                                                           :value="Math.round(((ing.stock || 0) - Math.floor((ing.stock || 0) / ing.pkgAmount) * ing.pkgAmount) * 100) / 100" 
-                                                           @input="ing.stock = (Math.floor((ing.stock || 0) / ing.pkgAmount) * ing.pkgAmount) + Number($event.target.value)" 
-                                                           min="0" step="1" style="width:70px; padding: 0.4rem;">
+                                                           :value="Math.round(((ing.stock || 0) - Math.floor((ing.stock || 0) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1)) * 100) / 100" 
+                                                           @input="ing.stock = (Math.floor((ing.stock || 0) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1)) + Number($event.target.value)" 
+                                                           min="0" step="any" style="width:70px; padding: 0.4rem;">
                                                     <span>{{ ing.unit }}</span>
                                                 </div>
                                             </div>
                                         </template>
                                         <template v-else>
-                                            <input type="number" v-model.number="ing.stock" min="0" step="1" style="width:80px; padding: 0.4rem;">
+                                            <input type="number" v-model.number="ing.stock" min="0" step="any" style="width:80px; padding: 0.4rem;">
                                             {{ ing.unit }}
                                         </template>
                                     </div>
