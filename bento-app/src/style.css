@@ -572,14 +572,12 @@ textarea:focus {
         display: block !important;
     }
     .shopping-print-layout {
-        display: flex !important;
-        flex-wrap: wrap !important;
+        display: grid !important;
         width: 100% !important;
-        align-content: flex-start !important;
+        grid-row-gap: 4px !important;
     }
     .print-item {
         display: flex !important;
-        margin-bottom: 2px !important;
         border-bottom: 1px dashed #999 !important;
         padding: 2px 0 !important;
         box-sizing: border-box !important;
@@ -599,26 +597,26 @@ textarea:focus {
     }
 
     /* 1 column layout */
-    .print-cols-1 .print-item {
-        width: 100% !important;
+    .print-cols-1 {
+        grid-template-columns: 1fr !important;
     }
     .print-cols-1 .print-item-name, .print-cols-1 .print-item-amount {
         font-size: 14px !important;
     }
 
     /* 2 column layout */
-    .print-cols-2 .print-item {
-        width: 48% !important;
-        margin-right: 2% !important;
+    .print-cols-2 {
+        grid-template-columns: 1fr 1fr !important;
+        grid-column-gap: 20px !important;
     }
     .print-cols-2 .print-item-name, .print-cols-2 .print-item-amount {
         font-size: 11px !important;
     }
 
     /* 3 column layout */
-    .print-cols-3 .print-item {
-        width: 32% !important;
-        margin-right: 1.3% !important;
+    .print-cols-3 {
+        grid-template-columns: 1fr 1fr 1fr !important;
+        grid-column-gap: 15px !important;
     }
     .print-cols-3 .print-item-name, .print-cols-3 .print-item-amount {
         font-size: 10px !important;
