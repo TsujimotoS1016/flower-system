@@ -565,48 +565,32 @@ textarea:focus {
     .hide-for-shopping-print {
         display: none !important;
     }
-    .shopping-list-header {
+    .hide-on-print {
         display: none !important;
     }
-    .shopping-list-table {
+    .print-only {
+        display: block !important;
+    }
+    .shopping-print-layout {
         display: flex !important;
         flex-wrap: wrap !important;
         width: 100% !important;
-        border: none !important;
+        align-content: flex-start !important;
     }
-    .shopping-list-table thead {
-        display: none !important;
-    }
-    .shopping-list-table tbody {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        width: 100% !important;
-    }
-    .shopping-list-table tr:not(.print-hide-row) {
+    .print-item {
         display: flex !important;
         width: 48% !important;
         margin-right: 2% !important;
         margin-bottom: 2px !important;
-        border: none !important;
         border-bottom: 1px dashed #999 !important;
         padding: 2px 0 !important;
         box-sizing: border-box !important;
         page-break-inside: avoid;
-    }
-    .shopping-list-table td {
-        display: flex !important;
+        break-inside: avoid;
         align-items: center !important;
-        border: none !important;
-        padding: 0 !important;
     }
-    .shopping-list-table td:nth-child(1) {
-        width: 65% !important;
-        font-size: 11px !important;
-        line-height: 1.2 !important;
-    }
-    .shopping-list-table td:nth-child(4) {
-        width: 35% !important;
-        justify-content: flex-end !important;
+    .shopping-list-header {
+        display: none !important;
     }
     .no-print-bg {
         background: transparent !important;

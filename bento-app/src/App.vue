@@ -1857,7 +1857,7 @@ export default {
                         予定を追加すると、ここにリストが表示されます。
                     </div>
                     <div v-else style="overflow-x: auto; margin-top: 1rem;">
-                        <table class="list-table shopping-list-table">
+                        <table class="list-table shopping-list-table hide-on-print">
                             <thead>
                                 <tr>
                                     <th>材料</th>
@@ -1887,6 +1887,16 @@ export default {
                                 </tr>
                             </tbody>
                         </table>
+
+                        <!-- 印刷専用のレイアウト（テーブルタグのバグを回避するためDIVを使用） -->
+                        <div class="print-only shopping-print-layout">
+                            <div v-for="item in weeklyShoppingList.filter(i => i.shortage > 0)" :key="'print-'+item.id" class="print-item">
+                                <div style="width: 65%; font-weight: 600; font-size: 11px;">{{ item.name }}</div>
+                                <div style="width: 35%; text-align: right; font-weight: bold; font-size: 11px; color: #000;">
+                                    {{ item.hasPackage ? (item.buyPackages + ' ' + item.pkgUnit) : formatAmount(item.shortage, item.unit, item.gPerUnit) }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
