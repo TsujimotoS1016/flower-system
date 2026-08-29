@@ -599,26 +599,35 @@ textarea:focus {
     .print-cols-1 {
         column-count: 1 !important;
     }
+    .print-cols-1 .print-item {
+        padding: 6px 0 !important;
+    }
     .print-cols-1 .print-item-name, .print-cols-1 .print-item-amount {
-        font-size: 14px !important;
+        font-size: 16px !important;
     }
 
     /* 2 column layout */
     .print-cols-2 {
         column-count: 2 !important;
-        column-gap: 20px !important;
+        column-gap: 30px !important;
+    }
+    .print-cols-2 .print-item {
+        padding: 5px 0 !important;
     }
     .print-cols-2 .print-item-name, .print-cols-2 .print-item-amount {
-        font-size: 11px !important;
+        font-size: 14px !important;
     }
 
     /* 3 column layout */
     .print-cols-3 {
         column-count: 3 !important;
-        column-gap: 15px !important;
+        column-gap: 20px !important;
+    }
+    .print-cols-3 .print-item {
+        padding: 3px 0 !important;
     }
     .print-cols-3 .print-item-name, .print-cols-3 .print-item-amount {
-        font-size: 10px !important;
+        font-size: 12px !important;
     }
     .shopping-list-header {
         display: none !important;
