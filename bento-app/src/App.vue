@@ -868,6 +868,13 @@ export default {
                     });
                 });
 
+                const printColumnClass = computed(() => {
+                    const count = weeklyShoppingList.value.filter(i => i.shortage > 0).length;
+                    if (count <= 25) return 'print-cols-1';
+                    if (count <= 60) return 'print-cols-2';
+                    return 'print-cols-3';
+                });
+
                 // データのロードと保存処理
                 const loadData = async (uid) => {
                     try {
@@ -1045,7 +1052,7 @@ export default {
                     onCompositionUpdate, onCompositionEnd, onInputName,
                     user, authMode, authEmail, authPassword, authError, handleLogin, handleLogout,
 
-                    weeklyPlan, addWeeklyPlanItem, removeWeeklyPlanItem, weeklyShoppingList, shoppingSortOrder, draggedIngredientIndex, onDragStart, onDrop,
+                    weeklyPlan, addWeeklyPlanItem, removeWeeklyPlanItem, weeklyShoppingList, printColumnClass, shoppingSortOrder, draggedIngredientIndex, onDragStart, onDrop,
                     dailyPlanToday, dailyPlanTomorrow, dailyActuals, addDailyPlanTodayItem, removeDailyPlanTodayItem,
                     addDailyPlanTomorrowItem, removeDailyPlanTomorrowItem, todayExpectedIngredients, todayExpectedIngredientsByMenu, showActualsModal, tomorrowPrepRecipes, deductStock,
                     bentoDestinations, bentoDestinationsHistory, bentoSubtotal1, bentoSubtotal2, bentoSubtotal3, bentoGrandTotal, downloadMonthlyCsv,
@@ -1889,10 +1896,10 @@ export default {
                         </table>
 
                         <!-- 印刷専用のレイアウト（テーブルタグのバグを回避するためDIVを使用） -->
-                        <div class="print-only shopping-print-layout">
+                        <div class="print-only shopping-print-layout" :class="printColumnClass">
                             <div v-for="item in weeklyShoppingList.filter(i => i.shortage > 0)" :key="'print-'+item.id" class="print-item">
-                                <div style="width: 65%; font-weight: 600; font-size: 11px;">{{ item.name }}</div>
-                                <div style="width: 35%; text-align: right; font-weight: bold; font-size: 11px; color: #000;">
+                                <div class="print-item-name">{{ item.name }}</div>
+                                <div class="print-item-amount">
                                     {{ item.hasPackage ? (item.buyPackages + ' ' + item.pkgUnit) : formatAmount(item.shortage, item.unit, item.gPerUnit) }}
                                 </div>
                             </div>
