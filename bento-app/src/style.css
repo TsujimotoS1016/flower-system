@@ -569,7 +569,8 @@ textarea:focus {
         display: none !important;
     }
     .shopping-list-table {
-        display: block !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
         width: 100% !important;
         border: none !important;
     }
@@ -577,19 +578,19 @@ textarea:focus {
         display: none !important;
     }
     .shopping-list-table tbody {
-        display: block !important;
-        column-count: 2; /* 少ない時は2列で綺麗に収まる */
-        column-gap: 20px;
+        display: flex !important;
+        flex-wrap: wrap !important;
         width: 100% !important;
     }
     .shopping-list-table tr:not(.print-hide-row) {
         display: flex !important;
-        width: 100% !important;
+        width: 48% !important;
+        margin-right: 2% !important;
+        margin-bottom: 2px !important;
         border: none !important;
         border-bottom: 1px dashed #999 !important;
         padding: 2px 0 !important;
         box-sizing: border-box !important;
-        break-inside: avoid;
         page-break-inside: avoid;
     }
     .shopping-list-table td {
