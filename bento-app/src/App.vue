@@ -1272,16 +1272,16 @@ export default {
                                             <div style="display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap;">
                                                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                                                     <input type="number" 
-                                                           :value="Math.floor((ing.stock || 0) / (ing.pkgAmount || 1))" 
-                                                           @input="ing.stock = (Number($event.target.value) * (ing.pkgAmount || 1)) + ((ing.stock || 0) - Math.floor((ing.stock || 0) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1))" 
+                                                           :value="Math.floor(((ing.stock || 0) + 0.001) / (ing.pkgAmount || 1))" 
+                                                           @input="ing.stock = Math.round(((Number($event.target.value) * (ing.pkgAmount || 1)) + ((ing.stock || 0) - Math.floor(((ing.stock || 0) + 0.001) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1))) * 1000) / 1000" 
                                                            min="0" step="1" style="width:70px; padding: 0.4rem;">
                                                     <span>{{ ing.pkgUnit }}</span>
                                                 </div>
                                                 <span style="font-weight: bold; color: var(--text-muted);">+</span>
                                                 <div style="display: flex; align-items: center; gap: 0.25rem;">
                                                     <input type="number" 
-                                                           :value="Math.round(((ing.stock || 0) - Math.floor((ing.stock || 0) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1)) * 100) / 100" 
-                                                           @input="ing.stock = (Math.floor((ing.stock || 0) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1)) + Number($event.target.value)" 
+                                                           :value="Math.round(((ing.stock || 0) - Math.floor(((ing.stock || 0) + 0.001) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1)) * 100) / 100" 
+                                                           @input="ing.stock = Math.round(((Math.floor(((ing.stock || 0) + 0.001) / (ing.pkgAmount || 1)) * (ing.pkgAmount || 1)) + Number($event.target.value)) * 1000) / 1000" 
                                                            min="0" step="any" style="width:70px; padding: 0.4rem;">
                                                     <span>{{ ing.unit }}</span>
                                                 </div>
