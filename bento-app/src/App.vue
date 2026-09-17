@@ -526,7 +526,7 @@ export default {
                 const dailyPlanTomorrow = ref([]);
                 const dailyActuals = ref({});
                 const bentoDestinations = ref({
-                    date: new Date().toISOString().split('T')[0], no1: '', no2: '', no3: '', no4: '', no5: '', no6: '', honsha: '',
+                    date: new Date().toISOString().split('T')[0], no1: '', no2: '', no3: '', no4: '', no5: '', no6: '', honsha: '', rinji: '',
                     e: '', w: '', familia: '', hajime: '', kishigawa: ''
                 });
                 const bentoDestinationsHistory = ref({});
@@ -539,7 +539,7 @@ export default {
                     weeklyPlan.value.splice(idx, 1);
                 };
                 
-                const bentoSubtotal1 = computed(() => Number(bentoDestinations.value.no1||0) + Number(bentoDestinations.value.no2||0) + Number(bentoDestinations.value.no3||0) + Number(bentoDestinations.value.no4||0) + Number(bentoDestinations.value.no5||0) + Number(bentoDestinations.value.no6||0) + Number(bentoDestinations.value.honsha||0));
+                const bentoSubtotal1 = computed(() => Number(bentoDestinations.value.no1||0) + Number(bentoDestinations.value.no2||0) + Number(bentoDestinations.value.no3||0) + Number(bentoDestinations.value.no4||0) + Number(bentoDestinations.value.no5||0) + Number(bentoDestinations.value.no6||0) + Number(bentoDestinations.value.honsha||0) + Number(bentoDestinations.value.rinji||0));
                 const bentoSubtotal2 = computed(() => Number(bentoDestinations.value.e||0) + Number(bentoDestinations.value.w||0));
                 const bentoSubtotal3 = computed(() => Number(bentoDestinations.value.familia||0) + Number(bentoDestinations.value.hajime||0) + Number(bentoDestinations.value.kishigawa||0));
                 const bentoGrandTotal = computed(() => bentoSubtotal1.value + bentoSubtotal2.value + bentoSubtotal3.value);
@@ -571,7 +571,7 @@ export default {
                         
                         const hist = bentoDestinationsHistory.value[dateStr];
                         if (hist) {
-                            val1 = Number(hist.no1||0) + Number(hist.no2||0) + Number(hist.no3||0) + Number(hist.no4||0) + Number(hist.no5||0) + Number(hist.no6||0) + Number(hist.honsha||0);
+                            val1 = Number(hist.no1||0) + Number(hist.no2||0) + Number(hist.no3||0) + Number(hist.no4||0) + Number(hist.no5||0) + Number(hist.no6||0) + Number(hist.honsha||0) + Number(hist.rinji||0);
                             val2 = Number(hist.e||0) + Number(hist.w||0);
                             val3 = Number(hist.familia||0) + Number(hist.hajime||0) + Number(hist.kishigawa||0);
                         }
@@ -965,7 +965,7 @@ export default {
                         
                         const hist = bentoDestinationsHistory.value[dateStr];
                         if (hist) {
-                            val1 = Number(hist.no1||0) + Number(hist.no2||0) + Number(hist.no3||0) + Number(hist.no4||0) + Number(hist.no5||0) + Number(hist.no6||0) + Number(hist.honsha||0);
+                            val1 = Number(hist.no1||0) + Number(hist.no2||0) + Number(hist.no3||0) + Number(hist.no4||0) + Number(hist.no5||0) + Number(hist.no6||0) + Number(hist.honsha||0) + Number(hist.rinji||0);
                             val2 = Number(hist.e||0) + Number(hist.w||0);
                             val3 = Number(hist.familia||0) + Number(hist.hajime||0) + Number(hist.kishigawa||0);
                         }
@@ -1672,7 +1672,7 @@ export default {
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">No, 3</th>
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">No, 4</th>
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">No, 5</th>
-                                <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;"></th>
+                                <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">No, 6</th>
                             </tr>
                             <tr>
                                 <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.no1" class="tally-input"></td>
@@ -1680,10 +1680,10 @@ export default {
                                 <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.no3" class="tally-input"></td>
                                 <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.no4" class="tally-input"></td>
                                 <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.no5" class="tally-input"></td>
-                                <td style="border: 1px solid #333; padding: 0.25rem;"></td>
+                                <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.no6" class="tally-input"></td>
                             </tr>
                             <tr style="background: #f8fafc;">
-                                <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">No, 6</th>
+                                <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">臨時</th>
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">本社</th>
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">計</th>
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">E</th>
@@ -1691,7 +1691,7 @@ export default {
                                 <th style="border: 1px solid #333; padding: 0.5rem; font-weight: 500;">計</th>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.no6" class="tally-input"></td>
+                                <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.rinji" class="tally-input"></td>
                                 <td style="border: 1px solid #333; padding: 0.25rem;"><input type="number" v-model.number="bentoDestinations.honsha" class="tally-input"></td>
                                 <td style="border: 1px solid #333; padding: 0.5rem; font-size: 1.5rem; font-weight: bold; position: relative;">
                                     <div class="circled-number">{{ bentoSubtotal1 || '' }}</div>
