@@ -870,8 +870,8 @@ export default {
 
                 const printColumnClass = computed(() => {
                     const count = weeklyShoppingList.value.filter(i => i.shortage > 0).length;
-                    if (count <= 25) return 'print-cols-1';
-                    if (count <= 60) return 'print-cols-2';
+                    if (count <= 10) return 'print-cols-1';
+                    if (count <= 30) return 'print-cols-2';
                     return 'print-cols-3';
                 });
 

@@ -600,10 +600,10 @@ textarea:focus {
         column-count: 1 !important;
     }
     .print-cols-1 .print-item {
-        padding: 6px 0 !important;
+        padding: 10px 0 !important;
     }
     .print-cols-1 .print-item-name, .print-cols-1 .print-item-amount {
-        font-size: 16px !important;
+        font-size: 20px !important;
     }
 
     /* 2 column layout */
@@ -612,10 +612,10 @@ textarea:focus {
         column-gap: 30px !important;
     }
     .print-cols-2 .print-item {
-        padding: 5px 0 !important;
+        padding: 6px 0 !important;
     }
     .print-cols-2 .print-item-name, .print-cols-2 .print-item-amount {
-        font-size: 14px !important;
+        font-size: 15px !important;
     }
 
     /* 3 column layout */
