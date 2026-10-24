@@ -516,7 +516,8 @@ textarea:focus {
 .monthly-summary-table th:nth-child(4),
 .monthly-summary-table th:nth-child(5),
 .monthly-summary-table th:nth-child(6) {
-    width: 25%; /* 3 columns * 25% = 75% for destinations, 25% left for date */
+    width: 25%;
+    /* 3 columns * 25% = 75% for destinations, 25% left for date */
 }
 
 .monthly-summary-table td {
@@ -562,19 +563,24 @@ textarea:focus {
     .print-hide-row {
         display: none !important;
     }
+
     .hide-for-shopping-print {
         display: none !important;
     }
+
     .hide-on-print {
         display: none !important;
     }
+
     .print-only {
         display: block !important;
     }
+
     .shopping-print-layout {
         display: block !important;
         width: 100% !important;
     }
+
     .print-item {
         display: flex !important;
         border-bottom: 1px dashed #999 !important;
@@ -584,10 +590,12 @@ textarea:focus {
         break-inside: avoid;
         align-items: center !important;
     }
+
     .print-item-name {
         width: 65% !important;
         font-weight: 600 !important;
     }
+
     .print-item-amount {
         width: 35% !important;
         text-align: right !important;
@@ -599,11 +607,14 @@ textarea:focus {
     .print-cols-1 {
         column-count: 1 !important;
     }
+
     .print-cols-1 .print-item {
         padding: 10px 0 !important;
     }
-    .print-cols-1 .print-item-name, .print-cols-1 .print-item-amount {
-        font-size: 20px !important;
+
+    .print-cols-1 .print-item-name,
+    .print-cols-1 .print-item-amount {
+        font-size: 28px !important;
     }
 
     /* 2 column layout */
@@ -611,11 +622,14 @@ textarea:focus {
         column-count: 2 !important;
         column-gap: 30px !important;
     }
+
     .print-cols-2 .print-item {
         padding: 6px 0 !important;
     }
-    .print-cols-2 .print-item-name, .print-cols-2 .print-item-amount {
-        font-size: 15px !important;
+
+    .print-cols-2 .print-item-name,
+    .print-cols-2 .print-item-amount {
+        font-size: 24px !important;
     }
 
     /* 3 column layout */
@@ -623,27 +637,50 @@ textarea:focus {
         column-count: 3 !important;
         column-gap: 20px !important;
     }
+
     .print-cols-3 .print-item {
         padding: 3px 0 !important;
     }
-    .print-cols-3 .print-item-name, .print-cols-3 .print-item-amount {
-        font-size: 12px !important;
+
+    .print-cols-3 .print-item-name,
+    .print-cols-3 .print-item-amount {
+        font-size: 20px !important;
     }
+
+    .print-shopping-header {
+        display: block !important;
+        margin-bottom: 16px !important;
+        padding-bottom: 8px !important;
+        border-bottom: 2px solid #333 !important;
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+
+    .print-shopping-title {
+        font-size: 26px !important;
+        font-weight: bold !important;
+        color: #000 !important;
+        letter-spacing: 0.05em;
+    }
+
     .shopping-list-header {
         display: none !important;
     }
+
     .no-print-bg {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
     }
+
     .print-amount-text {
         font-size: 11px !important;
         color: #000 !important;
     }
+
     @page {
-        margin: 5mm;
+        margin: 15mm 5mm;
         size: A4 portrait;
     }
 

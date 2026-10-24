@@ -1896,6 +1896,9 @@ export default {
                         </table>
 
                         <!-- 印刷専用のレイアウト（テーブルタグのバグを回避するためDIVを使用） -->
+                        <div class="print-only print-shopping-header">
+                            <div class="print-shopping-title">お買い物リスト</div>
+                        </div>
                         <div class="print-only shopping-print-layout" :class="printColumnClass">
                             <div v-for="item in weeklyShoppingList.filter(i => i.shortage > 0)" :key="'print-'+item.id" class="print-item">
                                 <div class="print-item-name">{{ item.name }}</div>
